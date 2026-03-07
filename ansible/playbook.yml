@@ -1,0 +1,123 @@
+---
+- name: Configuration du VPS Docker
+  hosts: vps
+  become: yes # Pour passer en root (sudo)
+
+  tasks:
+    - name: Mise à jour du cache APT et upgrade
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Installation des dépendances système
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - ufw
+        state: present
+
+    - name: Ajout de la clé GPG officielle de Docker
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Ajout du dépôt Docker
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Installation de Docker Engine et Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: Assurer que Docker est lancé et activé au boot
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Configuration du Firewall (UFW)
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '22'  # SSH
+        - '80'  # HTTP
+        - '443' # HTTPS
+
+    - name: Activation du Firewall
+      ufw:
+        state: enabled
+
+    - name: Installation de Fail2Ban
+      apt:
+        name: fail2ban
+        state: present
+
+    - name: Configuration de Fail2Ban pour SSH
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [sshd]
+          enabled = true
+          port = 22
+          filter = sshd
+          logpath = /var/log/auth.log
+          maxretry = 5
+          bantime = 1h
+          findtime = 10m
+
+    - name: Redémarrage de Fail2Ban
+      service:
+        name: fail2ban
+        state: restarted
+
+    - name: Sécurisation SSH (Désactivation mot de passe)
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      notify: Restart SSH
+    - name: Créer le réseau Docker 'proxy'
+      docker_network:
+        name: proxy
+
+    - name: Créer les dossiers de configuration Traefik
+      file:
+        path: "/opt/traefik/data"
+        state: directory
+        mode: '0755'
+
+    - name: Créer le fichier acme.json (droits restreints obligatoires)
+      file:
+        path: "/opt/traefik/data/acme.json"
+        state: touch
+        mode: '0600'
+
+    - name: Déployer la configuration Traefik (template ou copy)
+      copy:
+        dest: "/opt/traefik/data/traefik.yml"
+        content: |
+          # (Insère ici le contenu du traefik.yml ci-dessus)
+
+    - name: Lancer Traefik via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /opt/traefik
+        state: present
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: ssh
+        state: restarted
+

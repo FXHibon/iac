@@ -1,0 +1,21 @@
+services:
+  traefik:
+    image: traefik:3.6
+    container_name: traefik
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Pour écouter Docker
+      - ./data/traefik.yml:/traefik.yml:ro          # Config statique
+      - ./data/acme.json:/acme.json                 # Stockage des certifs SSL
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true # Réseau partagé par toutes tes futures apps
