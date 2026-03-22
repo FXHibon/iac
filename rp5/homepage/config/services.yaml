@@ -1,0 +1,34 @@
+- Supervision:
+    - Grafana:
+        icon: grafana.png
+        href: http://192.168.1.59:3000
+        version: 2
+        description: Dashboards & Metrics
+        container: grafana
+        username: admin
+        password: REDACTED_GRAFANA_PASSWORD
+    - Prometheus:
+        icon: prometheus.png
+        href: http://192.168.1.59:9090
+        container: prometheus
+        widget:
+          type: prometheus
+          url: http://192.168.1.59:9090
+
+- Media & Downloads:
+    - Plex:
+        icon: plex.png
+        href: http://192.168.1.59:32400/web
+        description: Media Server
+        widget:
+          type: plex
+          url: http://192.168.1.59:32400
+          key: REDACTED_PLEX_TOKEN
+    - Transmission:
+        icon: transmission.png
+        description: Download Manager
+        href: http://192.168.1.59:9091
+        container: transmission
+        widget:
+          type: transmission
+          url: http://192.168.1.59:9091

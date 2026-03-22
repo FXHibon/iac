@@ -1,0 +1,28 @@
+- logo:
+    icon: https://raw.githubusercontent.com/gethomepage/homepage/main/public/android-chrome-192x192.png
+- resources:
+    cpu: true
+    memory: true
+    disk: /
+    cputemp: true
+    tempmin: 0 # optional, minimum cpu temp
+    tempmax: 100 # optional, maximum cpu temp
+    uptime: true
+    units: metrics
+    network: eth0
+- datetime:
+    text_size: xl
+    locale: fr
+    format:
+      timeStyle: short
+      dateStyle: short
+      hour12: false
+- openmeteo:
+    label: Nantes
+    latitude: 47.23689227968613
+    longitude: -1.50898418605387
+    timezone: Europe/Paris
+    units: metric
+    cache: 5
+    format: # optional, Intl.NumberFormat options
+      maximumFractionDigits: 0

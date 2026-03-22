@@ -1,0 +1,78 @@
+services:
+  ###### - Entrypoint
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./homepage/config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=*
+
+  ###### - Feeds
+
+  transmission:
+    image: haugene/transmission-openvpn:latest
+    container_name: transmission
+    restart: on-failure:2
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./transmission/config:/config/transmission-home
+      - /home/plex/Media/Movies:/data/completed
+      - /home/plex/Media/incomplete:/data/incomplete
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - OPENVPN_PROVIDER=PROTONVPN
+      - OPENVPN_CONFIG=uk.protonvpn.udp,fr.protonvpn.udp,es.protonvpn.udp
+      - OPENVPN_USERNAME=jBpdg3mO77USjPFH+pmp
+      - OPENVPN_PASSWORD=IcnnmSgeh7X0MXOHFrrpdymlDq8h1zPy
+      - LOCAL_NETWORK=192.168.1.0/24
+      - TZ=Europe/Paris
+    ports:
+      - "9091:9091"
+
+  ###### - Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro1
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    user: "1000"
+    volumes:
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=REDACTED_GRAFANA_PASSWORD
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
