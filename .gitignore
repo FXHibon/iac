@@ -23,4 +23,4 @@ override.tf.json
 .terraformrc
 terraform.rc
 *.retry
-
+.secrets.decoded.yaml

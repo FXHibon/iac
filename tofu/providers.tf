@@ -1,0 +1,21 @@
+terraform {
+  required_providers {
+
+    sops = {
+      source  = "carlpett/sops"
+      version = "1.4.1"
+    }
+
+    ovh = {
+      source  = "ovh/ovh"
+      version = "2.12.0"
+    }
+  }
+}
+
+provider "ovh" {
+  endpoint           = "ovh-eu"
+  application_key    = data.sops_file.secrets.data["variables.ovh.application_key"]
+  application_secret = data.sops_file.secrets.data["variables.ovh.application_secret"]
+  consumer_key       = data.sops_file.secrets.data["variables.ovh.consumer_key"]
+}

@@ -8,7 +8,7 @@ resource "ovh_domain_zone_record" "home_subdomain" {
   subdomain = "home"
   fieldtype = "A"
   ttl       = 3600
-  target    = local.home_ip_v4
+  target    = data.sops_file.secrets.data["variables.home_ip_v4"]
 }
 
 data "ovh_vps" "main_vps" {
