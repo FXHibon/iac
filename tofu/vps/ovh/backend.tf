@@ -1,5 +1,10 @@
 terraform {
   backend "s3" {
+
+    # REQUIRED ENV:
+    # - AWS_ACCESS_KEY_ID
+    # - AWS_SECRET_ACCESS_KEY
+
     bucket = "hulking-weinberg"
     key    = "vps/tofu/terraform.tfstate"
     region = "rbx"
