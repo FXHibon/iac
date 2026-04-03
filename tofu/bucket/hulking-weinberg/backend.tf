@@ -6,7 +6,7 @@ terraform {
     # - AWS_SECRET_ACCESS_KEY
 
     bucket = "hulking-weinberg"
-    key    = "vps/tofu/ovh/vps"
+    key    = "vps/tofu/bucket/hulking-weinberg"
     region = "rbx"
 
     endpoints = {
