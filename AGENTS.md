@@ -22,7 +22,7 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
   - Managed by OpenTofu (`tofu/` dir)
   - Runs Traefik reverse proxy on public IP
   - DNS records map subdomains to home IP (REDACTED_HOME_IP_OLD) and VPS IP
-  - Ansible provisions Docker, Fail2Ban, UFW firewall
+  - Ansible provisions hostname, Docker, Fail2Ban, UFW firewall, SSH hardening
 
 ### Service Networking
 - **Traefik proxy network**: All services connect to external `proxy` network created by Ansible
@@ -61,10 +61,12 @@ tofu apply -var-file=env/main.tfvars
 cd ansible/
 ansible-playbook -i inventory.ini playbook.yml
 ```
-- Targets `vps` host group (inventory.ini sets ansible_host, ansible_user=debian, SSH key)
-- Installs Docker, Docker Compose plugin, UFW, Fail2Ban
-- Creates /opt/traefik directory structure for Traefik deployment
-- Configures SSH key-only auth, enables firewall (80, 443, 22)
+- Targets `vps` host group (`inventory.ini`: `vps.fxhibon.fr`, `ansible_user=debian`, SSH key `~/.ssh/id_ovh_vps`)
+- Sets hostname to `vps.fxhibon.fr`
+- Hardens SSH: no root login, key-only auth, `MaxAuthTries 3`, no X11/TCP forwarding (drop-in `sshd_config.d/99-hardening.conf`)
+- Configures Fail2Ban SSH jail (5 retries, 1 h ban, systemd backend)
+- Enables UFW firewall (default deny, allow 22/80/443)
+- Installs Docker Engine + Compose plugin; adds `debian` to `docker` group
 
 ## Project-Specific Conventions
 
@@ -73,19 +75,18 @@ ansible-playbook -i inventory.ini playbook.yml
   - `env/main.tfvars`: Variable overrides (git-ignored)
   - `provider.tf`: OVH provider config + required version (2.12.0)
 - `ansible/`: Playbook for VPS bootstrapping
-  - `inventory.ini`: Host definitions (hardcoded IP placeholder)
-  - `playbook.yml`: Docker, security, Traefik setup
+  - `inventory.ini`: Host definitions (`vps.fxhibon.fr`, user `debian`)
+  - `playbook.yml`: Hostname, SSH hardening, Fail2Ban, UFW, Docker
 - `rp5/`: Docker Compose stack for Raspberry Pi
   - `sync.sh`: Deployment script (SSH+SCP to rp5-internal)
   - `homepage/config/`: Homepage YAML configs (services.yaml, settings.yaml, widgets.yaml)
   - `prometheus/`, `grafana/`, `transmission/config/`: Service-specific configs
 - `traefik/`: Traefik reverse proxy (separate from rp5 for modularity)
-  - `data/traefik.yml`: Static config (created by Ansible)
+  - `data/traefik.yml`: Static config (deployed manually or via separate step)
   - `data/acme.json`: ACME certificate storage (600 perms required)
 
 ### Key Integration Points
-1. **Ansible → Traefik**: Playbook creates `/opt/traefik/data/` and network, then launches traefik compose
-2. **Traefik → Docker**: Listens to Docker socket, auto-discovers containers on `proxy` network
+1. **Traefik → Docker**: Listens to Docker socket, auto-discovers containers on `proxy` network
 3. **Prometheus → Node Exporter**: Scrapes `node-exporter:9100` (DNS resolved via Docker Compose network)
 4. **Homepage → Docker**: Mounts `/var/run/docker.sock` for widget discovery
 5. **RP5 Sync**: `rp5-internal` SSH host must be configured in local SSH config

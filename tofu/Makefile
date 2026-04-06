@@ -1,7 +1,11 @@
-.PHONY: secrets-edit secrets-decode env-print encrypt-file
+.PHONY: fmt secrets-edit secrets-decode env-print encrypt-file
 
 SECRETS_FILE := secrets.yaml
 DECODED_FILE := .secrets.decoded.yaml
+
+# Run formatter on all .tf files in the project
+fmt:
+	tofu fmt -recursive .
 
 # Open secrets.yaml in your $EDITOR via sops
 secrets-edit:
