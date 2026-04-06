@@ -150,3 +150,76 @@
       ansible.builtin.service:
         name: fail2ban
         state: restarted
+
+- name: Bootstrap Raspberry Pi
+  hosts: raspberry
+  become: true
+
+  tasks:
+    # ── System ────────────────────────────────────────────────────────────────
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - fail2ban
+          - ufw
+        state: present
+
+    # ── SSH hardening ─────────────────────────────────────────────────────────
+
+    - name: Configure sshd
+      ansible.builtin.blockinfile:
+        path: /etc/ssh/sshd_config.d/99-hardening.conf
+        create: true
+        mode: "0600"
+        block: |
+          PermitRootLogin no
+          PasswordAuthentication no
+          PubkeyAuthentication yes
+          AuthorizedKeysFile .ssh/authorized_keys
+          PermitEmptyPasswords no
+          ChallengeResponseAuthentication no
+          X11Forwarding no
+          AllowTcpForwarding no
+          MaxAuthTries 3
+          LoginGraceTime 30
+      notify: Restart sshd
+
+    # ── Fail2Ban ──────────────────────────────────────────────────────────────
+
+    - name: Configure Fail2Ban jail for SSH
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/jail.d/sshd.conf
+        mode: "0644"
+        content: |
+          [sshd]
+          enabled  = true
+          port     = ssh
+          filter   = sshd
+          backend  = auto
+          maxretry = 5
+          bantime  = 1h
+          findtime = 10m
+      notify: Restart fail2ban
+
+    - name: Enable and start Fail2Ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+
+    - name: Restart fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: restarted
