@@ -2,9 +2,9 @@
 
 set -eax
 
-scp -r . "rp5-internal:/home/fxhibon/apps/"
+scp -r . "rp5:/home/fxhibon/apps/"
 
-ssh fxhibon@rp5-internal << 'EOF'
+ssh rp5 << 'EOF'
     cd /home/fxhibon/apps/
     docker compose up -d --remove-orphans --force-recreate --pull always
 EOF 2> /dev/null

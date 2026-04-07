@@ -7,7 +7,7 @@ f_container_name()
 
 f_find_all()
 {
-    curl --silent ipinfo.io/$ext_ip
+    curl --silent ipinfo.io/$ext_ip | jq
 }
 
 var_cont_name=$(f_container_name)
