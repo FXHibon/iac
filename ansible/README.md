@@ -32,6 +32,9 @@ ansible-playbook playbook.yml --check
 
 # Apply
 ansible-playbook playbook.yml
+
+# Apply only specific sections using tags:
+ansible-playbook playbook.yml --tags "fail2ban"
 ```
 
 Run a specific section using tags:
@@ -57,29 +60,17 @@ ansible/
 
 ## Inventory
 
-`inventory.ini` targets a single host in the `[vps]` group:
-
-```ini
-[vps]
-vps.fxhibon.fr ansible_user=debian ansible_ssh_private_key_file=~/.ssh/id_ovh_vps
-```
-
 To target a different host or user without editing the file:
 
 ```bash
 ansible-playbook playbook.yml -i "1.2.3.4," -u root --private-key ~/.ssh/other_key
 ```
 
+
+
 ## Verify after provisioning
 
 ```bash
-# SSH hardening applied
-ssh -o PasswordAuthentication=yes debian@vps.fxhibon.fr   # should be refused
-
 # Fail2Ban active
 ssh debian@vps.fxhibon.fr "sudo fail2ban-client status sshd"
-
-# Docker running
-ssh debian@vps.fxhibon.fr "docker info"
-ssh debian@vps.fxhibon.fr "docker compose version"
 ```

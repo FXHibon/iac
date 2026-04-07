@@ -20,3 +20,34 @@ Infrastructure as Code for a personal homelab and OVH VPS — managed with OpenT
 | [`ansible/`](ansible/) | Configures the VPS post-provision |
 | [`rp5/`](rp5/) | Docker Compose stack running on a local Raspberry Pi 5 |
 | [`traefik/`](traefik/) | Reverse proxy routing for exposed services |
+
+## General
+
+```shell
+
+# security tools
+systemctl status fail2ban
+systemctl status ufw
+
+# list jails
+fail2ban-client status
+
+# details on a specific jail
+fail2ban-client status sshd
+
+# list banned IPs, grouped by jails
+fail2ban-client banned | tr "'" '"' | jq
+
+# list geolocation of banned IPs
+fail2ban-client banned | \
+tr "'" '"' | \
+jq -r '.[0].sshd.[]' | \
+while read line
+do
+  geoiplookup $line | sed -r 's/GeoIP Country Edition: //g'
+done | \
+sort | uniq -c | sort --numeric --reverse
+
+# firewall status
+ufw status verbose
+```

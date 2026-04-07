@@ -1,5 +1,6 @@
 # Misc
 
+- ssh: home.fxhibon.fr:22
 - id_rp5.pub: Public SSH key for RP5
 
 # Services
@@ -12,5 +13,6 @@
 | Plex Server                       | 192.168.1.59:32400 |
 | Grafana                           | 192.168.1.59:3000  |
 | Prometheus                        | 192.168.1.59:9090  |
+| AlertManager                      | 192.168.1.59:9093  |
 | Node Exporter                     | 192.168.1.59:9100  |
 | Transmission OpenVPN              | 192.168.1.59:9091  |

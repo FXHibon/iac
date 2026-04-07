@@ -19,6 +19,8 @@
           - gnupg
           - ufw
           - fail2ban
+          - jq
+          - geoip-bin
         state: present
 
     # ── Hostname ──────────────────────────────────────────────────────────────
@@ -168,6 +170,8 @@
         name:
           - fail2ban
           - ufw
+          - jq
+          - geoip-bin
         state: present
 
     # ── SSH hardening ─────────────────────────────────────────────────────────
@@ -193,21 +197,23 @@
     # ── Fail2Ban ──────────────────────────────────────────────────────────────
 
     - name: Configure Fail2Ban jail for SSH
+      tags: fail2ban
       ansible.builtin.copy:
         dest: /etc/fail2ban/jail.d/sshd.conf
         mode: "0644"
         content: |
           [sshd]
+          backend=systemd
           enabled  = true
           port     = ssh
           filter   = sshd
-          backend  = auto
           maxretry = 5
           bantime  = 1h
           findtime = 10m
       notify: Restart fail2ban
 
     - name: Enable and start Fail2Ban
+      tags: fail2ban
       ansible.builtin.service:
         name: fail2ban
         state: started
