@@ -11,14 +11,6 @@ resource "ovh_domain_zone_record" "home_subdomain_v4" {
   target    = data.sops_file.secrets.data["home_ip_v4"]
 }
 
-resource "ovh_domain_zone_record" "home_subdomain_v6" {
-  zone      = ovh_domain_name.root_domain.domain_name
-  subdomain = "home"
-  fieldtype = "AAAA"
-  ttl       = 3600
-  target    = data.sops_file.secrets.data["home_ip_v6"]
-}
-
 data "ovh_vps" "main_vps" {
   service_name = ovh_vps.main_vps.service_name
 }
