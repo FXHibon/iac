@@ -1,6 +1,9 @@
 global:
   resolve_timeout: 5m
 
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
 route:
   receiver: 'telegram'
   group_wait: 30s
@@ -13,3 +16,6 @@ receivers:
       - bot_token: 'REDACTED_TELEGRAM_TOKEN'
         chat_id: REDACTED_CHAT_ID
         send_resolved: true
+        parse_mode: 'HTML'
+        message: '{{ template "telegram.text" . }}'
+

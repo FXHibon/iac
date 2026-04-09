@@ -1,14 +1,12 @@
-.PHONY: fmt secrets-edit secrets-decode env-print encrypt-file
+.PHONY: fmt plan apply fmt secrets-edit secrets-decode secrets-encode env-print
 
 SECRETS_FILE := secrets.yaml
 
 plan:
-	eval $(make env-print)
-	tofu -chdir=vps/ovh plan
+	eval $$(make env-print) && tofu -chdir=vps/ovh plan
 
 apply:
-	eval $(make env-print)
-	tofu -chdir=vps/ovh apply
+	eval $$(make env-print) && tofu -chdir=vps/ovh apply
 
 # Run formatter on all .tf files in the project
 fmt:
@@ -22,9 +20,9 @@ secrets-edit:
 secrets-decode:
 	sops -d $(SECRETS_FILE)
 
-# Encrypt a file in-place using sops + age: make encrypt-file FILE=path/to/file.yaml
+# Encrypt a file in-place using sops + age: make secrets-encode FILE=path/to/file.yaml
 # Relies on .sops.yaml config or SOPS_AGE_RECIPIENTS env var for the age recipient
-encrypt-file:
+secrets-encode:
 	@test -n "$(FILE)" || (echo "Usage: make encrypt-file FILE=<path>"; exit 1)
 	sops --encrypt --in-place $(FILE)
 

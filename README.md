@@ -50,4 +50,20 @@ sort | uniq -c | sort --numeric --reverse
 
 # firewall status
 ufw status verbose
+
+# test alertmanager
+curl -v -H "Content-Type: application/json" -d '[
+  {
+    "labels": {
+      "alertname": "TestAlert",
+      "severity": "critical",
+      "instance": "localhost"
+    },
+    "annotations": {
+      "summary": "Manual test alert",
+      "description": "If you are seeing this, Alertmanager notifications are working!"
+    }
+  }
+]' http://localhost:9093/api/v2/alerts
+
 ```

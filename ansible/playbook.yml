@@ -21,6 +21,7 @@
           - fail2ban
           - jq
           - geoip-bin
+          - nvim
         state: present
 
     # ── Hostname ──────────────────────────────────────────────────────────────
@@ -127,6 +128,7 @@
           - docker-ce-cli
           - containerd.io
           - docker-compose-plugin
+          - nvim
         state: present
         update_cache: true
 

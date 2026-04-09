@@ -11,8 +11,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro # Pour écouter Docker
-      - ./data/traefik.yml:/traefik.yml:ro          # Config statique
-      - ./data/acme.json:/acme.json                 # Stockage des certifs SSL
+      - ./data/traefik.yml:/traefik.yml:ro           # Config statique
+      - ./data/acme.json:/acme.json                  # Stockage des certifs SSL
     networks:
       - proxy
 

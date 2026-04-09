@@ -43,6 +43,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./alertmanager/templates:/etc/alertmanager/templates
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
     ports:
