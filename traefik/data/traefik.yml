@@ -1,5 +1,10 @@
 api:
-  dashboard: false
+  dashboard: true
+
+log:
+  level: INFO
+
+accessLog: {}
 
 entryPoints:
   web:

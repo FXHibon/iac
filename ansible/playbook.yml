@@ -144,6 +144,57 @@
         groups: docker
         append: true
 
+    # ── Traefik Deployment ─────────────────────────────────────────────────────
+
+    - name: Create proxy Docker network
+      community.docker.docker_network:
+        name: proxy
+        state: present
+      tags: traefik
+
+    - name: Ensure app directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      loop:
+        - /home/debian/apps
+        - /home/debian/apps/traefik
+        - /home/debian/apps/traefik/data
+      tags: traefik
+
+    - name: Copy Traefik configuration files
+      ansible.builtin.copy:
+        src: "../traefik/{{ item.src }}"
+        dest: "/home/debian/apps/traefik/{{ item.dest }}"
+        owner: debian
+        group: debian
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: "docker-compose.yml", dest: "docker-compose.yml", mode: "0644" }
+        - { src: "data/traefik.yml", dest: "data/traefik.yml", mode: "0644" }
+      tags: traefik
+
+    - name: Ensure acme.json exists with correct permissions
+      ansible.builtin.file:
+        path: /home/debian/apps/traefik/data/acme.json
+        state: touch
+        owner: debian
+        group: debian
+        mode: "0600"
+        modification_time: preserve
+        access_time: preserve
+      tags: traefik
+
+    - name: Start Traefik via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/traefik
+        state: present
+        pull: always
+      tags: traefik
+
   handlers:
     - name: Restart sshd
       ansible.builtin.service:

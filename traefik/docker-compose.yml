@@ -1,7 +1,9 @@
 services:
   traefik:
-    image: traefik:3.6
+    image: traefik:3.7
     container_name: traefik
+    command:
+      - "--configfile=/traefik.yml"
     restart: always
     security_opt:
       - no-new-privileges:true
@@ -15,6 +17,18 @@ services:
       - ./data/acme.json:/acme.json                  # Stockage des certifs SSL
     networks:
       - proxy
+    labels:
+      - "traefik.enable=true"
+      # Exposer le dashboard en HTTPS
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.vps.fxhibon.fr`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+      # Restriction d'accès par IP (IPAllowList) + Basic Auth (Defense-in-depth)
+      - "traefik.http.routers.dashboard.middlewares=dashboard-ipallowlist,dashboard-auth"
+      - "traefik.http.middlewares.dashboard-ipallowlist.ipallowlist.sourcerange=REDACTED_HOME_IP/32,127.0.0.1/32"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$16gt8564$$TIPmccK4/8STTOTgRtpVr/"
 
 networks:
   proxy:
