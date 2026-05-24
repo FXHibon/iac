@@ -25,3 +25,4 @@ terraform.rc
 *.retry
 .secrets.decoded.yaml
 traefik/data/acme.json
+.antigravitycli

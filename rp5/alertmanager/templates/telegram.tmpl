@@ -1,0 +1,12 @@
+{{ define "telegram.text" }}
+{{ if eq .Status "firing" }}🔥 <b>{{ .Status | toUpper }}</b> {{ else }}✅ <b>{{ .Status | toUpper }}</b> {{ end }}
+<b>Alert:</b> {{ .CommonLabels.alertname }}
+<b>Severity:</b> <code>{{ .CommonLabels.severity | toUpper }}</code>
+<b>Summary:</b> {{ .CommonAnnotations.summary }}
+<b>Description:</b> {{ .CommonAnnotations.description }}
+
+<b>Details:</b>
+{{ range .Alerts }}
+• {{ .Annotations.summary }} ({{ .Labels.instance }})
+{{ end }}
+{{ end }}
