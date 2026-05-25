@@ -21,7 +21,7 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 - **OVH VPS**: Public-facing infrastructure
   - Managed by OpenTofu (`tofu/` dir)
   - Runs Traefik reverse proxy on public IP
-  - DNS records map subdomains to home IP (REDACTED_HOME_IP) and VPS IP
+  - DNS records map subdomains to home IP (<HOME_IP>) and VPS IP
   - Ansible provisions hostname, Docker, Fail2Ban, UFW firewall, SSH hardening, and Traefik directories/networks
 
 ### Service Networking
@@ -34,7 +34,6 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 ### Configuration Management
 - **Terraform state**: Committed to repo (`terraform.tfstate`, `.tfstate.backup`)
 - **OVH API credentials**: Via variables (ovh_application_key, ovh_application_secret, ovh_consumer_key)
-- **Locals**: Home IP hardcoded in `tofu/variables.tf` (REDACTED_HOME_IP)
 - **Sensitive data**: credentials stored externally (env file or tfvars, referenced in .gitignore)
 
 ## Critical Workflows
