@@ -144,6 +144,14 @@
         groups: docker
         append: true
 
+    - name: Log into Docker Hub
+      community.docker.docker_login:
+        username: "{{ docker_username }}"
+        password: "{{ docker_password }}"
+        state: present
+      become: false
+      tags: docker
+
     # ── Traefik Deployment ─────────────────────────────────────────────────────
 
     - name: Create proxy Docker network
@@ -167,7 +175,7 @@
 
     - name: Copy Traefik configuration files
       ansible.builtin.copy:
-        src: "../traefik/{{ item.src }}"
+        src: "../../deployments/vps/traefik/{{ item.src }}"
         dest: "/home/debian/apps/traefik/{{ item.dest }}"
         owner: debian
         group: debian
@@ -218,7 +226,7 @@
 
     - name: Copy Monitoring configuration files
       ansible.builtin.copy:
-        src: "../monitoring/{{ item.src }}"
+        src: "../../deployments/vps/monitoring/{{ item.src }}"
         dest: "/home/debian/apps/monitoring/{{ item.dest }}"
         owner: debian
         group: debian
@@ -237,6 +245,43 @@
         state: present
         pull: always
       tags: monitoring
+
+    # ── Fresh-Fridge Deployment ────────────────────────────────────────────────
+
+    - name: Ensure fresh-fridge directories exist
+      ansible.builtin.file:
+        path: /home/debian/apps/fresh-fridge
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      tags: fresh-fridge
+
+    - name: Copy fresh-fridge docker-compose
+      ansible.builtin.copy:
+        src: ../../deployments/vps/fresh-fridge/docker-compose.yml
+        dest: /home/debian/apps/fresh-fridge/docker-compose.yml
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: fresh-fridge
+
+    - name: Create fresh-fridge .env file
+      ansible.builtin.copy:
+        dest: /home/debian/apps/fresh-fridge/.env
+        content: "GEMINI_API_KEY={{ fresh_fridge_gemini_api_key }}\n"
+        owner: debian
+        group: debian
+        mode: "0600"
+      tags: fresh-fridge
+
+    - name: Start fresh-fridge via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/fresh-fridge
+        state: present
+        pull: always
+      become: false
+      tags: fresh-fridge
 
   handlers:
     - name: Restart sshd
@@ -314,6 +359,33 @@
         name: fail2ban
         state: started
         enabled: true
+
+    # ── RP5 Stack Deployment ───────────────────────────────────────────────────
+
+    - name: Ensure apps directory exists on RP5
+      ansible.builtin.file:
+        path: /home/fxhibon/apps
+        state: directory
+        owner: fxhibon
+        group: fxhibon
+        mode: "0755"
+      tags: rp5
+
+    - name: Copy RP5 docker stack files
+      ansible.builtin.copy:
+        src: ../../deployments/rp5/
+        dest: /home/fxhibon/apps/
+        owner: fxhibon
+        group: fxhibon
+        mode: "0755"
+      tags: rp5
+
+    - name: Start RP5 Docker stack
+      community.docker.docker_compose_v2:
+        project_src: /home/fxhibon/apps
+        state: present
+        pull: always
+      tags: rp5
 
   handlers:
     - name: Restart sshd

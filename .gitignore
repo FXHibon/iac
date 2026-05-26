@@ -26,3 +26,9 @@ terraform.rc
 .secrets.decoded.yaml
 traefik/data/acme.json
 .antigravitycli
+
+# Local decrypted application secrets
+.env.decrypted
+.env
+*.decrypted.env
+*.decrypted

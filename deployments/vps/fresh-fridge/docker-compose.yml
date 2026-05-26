@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    image: fxhibon/fresh-fridge:master
+    container_name: fresh-fridge
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fresh-fridge.entrypoints=websecure"
+      - "traefik.http.routers.fresh-fridge.rule=Host(`fresh-fridge.vps.fxhibon.fr`)"
+      - "traefik.http.routers.fresh-fridge.tls=true"
+      - "traefik.http.routers.fresh-fridge.tls.certresolver=myresolver"
+      - "traefik.http.services.fresh-fridge.loadbalancer.server.port=3000"
+
+networks:
+  proxy:
+    external: true

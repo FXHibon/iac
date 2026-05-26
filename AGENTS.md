@@ -13,20 +13,20 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 ## Architecture Patterns
 
 ### Multi-Environment Topology
-- **RP5 (Raspberry Pi 5)**: Local network services (192.168.1.59), synced via `rp5/sync.sh`
+- **RP5 (Raspberry Pi 5)**: Local network services (192.168.1.59), managed via Ansible (`--tags rp5`)
   - Runs main application stack: homepage, transmission, prometheus, grafana, node-exporter
   - Deployed via SSH + Docker Compose from local machine
   - DNS and VPS serve as external endpoints
   
 - **OVH VPS**: Public-facing infrastructure
-  - Managed by OpenTofu (`tofu/` dir)
+  - Managed by OpenTofu (`infra/tofu/` dir)
   - Runs Traefik reverse proxy on public IP
   - DNS records map subdomains to home IP (<HOME_IP>) and VPS IP
   - Ansible provisions hostname, Docker, Fail2Ban, UFW firewall, SSH hardening, and Traefik directories/networks
 
 ### Service Networking
 - **Traefik proxy network**: All VPS services connect to the external `proxy` network created by Ansible/sync script.
-- **Docker Compose structure**: Each service group has a separate compose file (`traefik/`, `rp5/`).
+- **Docker Compose structure**: Each service group has a separate compose file under `deployments/` (`vps/traefik/`, `rp5/`).
 - **Port mapping**: Services expose container ports internally; Traefik routes via Docker labels (e.g., `traefik.enable=true`).
   - Homepage: 3001, Prometheus: 9090, Grafana: 3000, Transmission: 9091, Node Exporter: 9100.
   - Traefik: exposes public `80` (HTTP) and `443` (HTTPS) ports. The admin panel (`api@internal`) is secured and never exposed on a host port.
@@ -38,28 +38,32 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 
 ## Critical Workflows
 
-### Deploy to Raspberry Pi
+### Deploy Stacks and Applications (Unified Ansible Workflow)
+All container stacks are deployed and orchestrated using tags within the unified Ansible playbook:
 ```bash
-cd rp5/
-./sync.sh  # Syncs config to rp5-internal SSH host, runs docker compose up -d
-```
-- Pushes entire `rp5/` directory to remote
-- Executes docker-compose with `--force-recreate` and `--pull always`
-- Uses zsh with `set -eax` (exit on error, print commands)
+cd infra/ansible/
 
-### Deploy Traefik reverse proxy to VPS
-```bash
-cd traefik/
-./sync.sh  # Syncs Traefik configuration, sets permissions, and starts container on VPS
+# Deploy/update Traefik reverse proxy only
+./deploy.sh --tags traefik
+
+# Deploy/update Monitoring stack only
+./deploy.sh --tags monitoring
+
+# Deploy/update Fresh-Fridge application (with automatic secure SOPS secrets lookup)
+./deploy.sh --tags fresh-fridge
+
+# Deploy/update the entire Raspberry Pi (rp5) home lab stack
+./deploy.sh --tags rp5
+
+# Run the complete configuration and deploy all stacks across VPS and RP5
+./deploy.sh
 ```
-- Recreates Traefik folders on remote VPS (`/home/debian/apps/traefik/data`).
-- Syncs `docker-compose.yml` and `data/traefik.yml`.
-- Automatically initializes `acme.json` with secure `0600` permissions.
-- Ensures the external Docker `proxy` network exists and pulls the latest Traefik image.
+- **Idempotent Deployments**: Ansible ensures directories exist, copies configuration files only when they change, sets appropriate file permissions (e.g. `acme.json` 0600), and restarts containers only when configuration shifts.
+- **Secure Secrets Handling**: Decrypts secrets in-memory during playbook execution, completely avoiding writing temporary unencrypted files to local disk.
 
 ### Provision OVH Infrastructure
 ```bash
-cd tofu/vps/ovh/
+cd infra/tofu/vps/ovh/
 tofu apply
 ```
 - Creates VPS instance and DNS records (including wildcard `*.vps.fxhibon.fr` and `traefik.vps.fxhibon.fr`).
@@ -67,7 +71,7 @@ tofu apply
 
 ### Configure VPS with Ansible
 ```bash
-cd ansible/
+cd infra/ansible/
 ansible-playbook -i inventory.ini playbook.yml
 ```
 - Targets `vps` host group (`inventory.ini`: `vps.fxhibon.fr`, `ansible_user=debian`, SSH key `~/.ssh/id_ovh_vps`)
@@ -81,20 +85,18 @@ ansible-playbook -i inventory.ini playbook.yml
 ## Project-Specific Conventions
 
 ### Directory Structure
-- `tofu/`: OpenTofu/Terraform IaC (provider: OVH)
+- `infra/tofu/`: OpenTofu/Terraform IaC (provider: OVH)
   - `env/main.tfvars`: Variable overrides (git-ignored)
   - `provider.tf`: OVH provider config + required version (2.12.0)
-- `ansible/`: Playbook for VPS bootstrapping
-  - `inventory.ini`: Host definitions (`vps.fxhibon.fr`, user `debian`)
-  - `playbook.yml`: Hostname, SSH hardening, Fail2Ban, UFW, Docker, and Traefik tasks
-- `rp5/`: Docker Compose stack for Raspberry Pi
-  - `sync.sh`: Deployment script (SSH+SCP to rp5-internal)
+- `infra/ansible/`: Playbook for host bootstrapping and stack deployments
+  - `inventory.ini`: Host definitions (`vps.fxhibon.fr`, user `debian`, `home.fxhibon.fr`, user `fxhibon`)
+  - `playbook.yml`: SSH hardening, Fail2Ban, UFW, Docker, and service deployment tasks
+- `deployments/rp5/`: Docker Compose stack for Raspberry Pi
   - `homepage/config/`: Homepage YAML configs (services.yaml, settings.yaml, widgets.yaml)
   - `prometheus/`, `grafana/`, `transmission/config/`: Service-specific configs
-- `traefik/`: Traefik reverse proxy (separate from rp5 for modularity)
+- `deployments/vps/traefik/`: Traefik reverse proxy
   - `data/traefik.yml`: Static configuration enabling entrypoints, ACME, and logs
   - `data/acme.json`: ACME certificate storage (0600 permissions required, git-ignored)
-  - `sync.sh`: Automated developer synchronization and deployment script
   - `whoami-test.yml`: Testing utility for dynamic auto-discovery validation
 
 ### Key Integration Points
@@ -122,15 +124,13 @@ ansible-playbook -i inventory.ini playbook.yml
 ## Common Pitfalls & Debugging
 
 - **Docker IPv6 Source IP Loss (403 Forbidden)**: If external services have `AAAA` (IPv6) records, browsers connect via IPv6. Because the Docker bridge network does not support IPv6 by default, `docker-proxy` translates the traffic to IPv4 and rewrites the source IP to the bridge gateway (`172.18.0.1`), causing IP Whitelists to return 403. **Solution**: Only use `A` (IPv4) records in `dns.tf` for whitelisted domains to preserve the real client IP.
-- **sync.sh permissions**: Ensure zsh is available and SSH key configured for `vps.fxhibon.fr` and `rp5-internal`.
-- **Traefik ACME**: `acme.json` must have strictly `0600` permissions; Ansible and the Traefik `sync.sh` script enforce this.
-- **Docker network**: `proxy` network must be created before Traefik or service startup (both Ansible and `sync.sh` handle this).
+- **Traefik ACME**: `acme.json` must have strictly `0600` permissions; Ansible enforces this.
+- **Docker network**: `proxy` network must be created before Traefik or service startup (Ansible handles this).
 - **OVH API**: Consumer key expires; regenerate via OVH Control Panel if auth fails.
 - **Basic Auth escaping**: Hashed passwords in docker-compose.yml must use double dollar signs (`$$apr1$$...`) or Docker Compose will interpret them as empty environment variables.
 
 ## Files to Prioritize
-- `tofu/vps/ovh/dns.tf`: VPS DNS resource definitions (A records only)
-- `ansible/playbook.yml`: System setup + Traefik task blocks
-- `traefik/docker-compose.yml`: Traefik v3.7 service and dashboard labels
-- `traefik/sync.sh`: Traefik deployment script
-- `traefik/data/traefik.yml`: Traefik static settings (logging, providers, entrypoints)
+- `infra/tofu/vps/ovh/dns.tf`: VPS DNS resource definitions (A records only)
+- `infra/ansible/playbook.yml`: System setup + service deployment task blocks
+- `deployments/vps/traefik/docker-compose.yml`: Traefik v3.7 service and dashboard labels
+- `deployments/vps/traefik/data/traefik.yml`: Traefik static settings (logging, providers, entrypoints)

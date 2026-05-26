@@ -1,0 +1,9 @@
+creation_rules:
+  - path_regex: infra/tofu/secrets\.yaml$
+    key_groups:
+      - age:
+          - age1clehw5qfnjcx8dc45hr0zldvrw37fhp6xvfyf5fgxxkvde58ccjs7kmcgq
+  - path_regex: infra/ansible/.*\.enc\.yaml$
+    key_groups:
+      - age:
+          - age1clehw5qfnjcx8dc45hr0zldvrw37fhp6xvfyf5fgxxkvde58ccjs7kmcgq
