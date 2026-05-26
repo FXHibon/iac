@@ -21,7 +21,7 @@ services:
       - "traefik.enable=true"
       # Exposer le dashboard en HTTPS
       - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.vps.fxhibon.fr`)"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.fxhibon.fr`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.tls.certresolver=myresolver"

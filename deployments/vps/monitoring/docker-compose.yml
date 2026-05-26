@@ -33,7 +33,7 @@ services:
       - "traefik.enable=true"
       # Expose Prometheus securely in HTTPS
       - "traefik.http.routers.prometheus.entrypoints=websecure"
-      - "traefik.http.routers.prometheus.rule=Host(`prometheus.vps.fxhibon.fr`)"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.fxhibon.fr`)"
       - "traefik.http.routers.prometheus.service=prometheus"
       - "traefik.http.routers.prometheus.tls=true"
       - "traefik.http.routers.prometheus.tls.certresolver=myresolver"
@@ -63,7 +63,7 @@ services:
       - "traefik.enable=true"
       # Expose Grafana securely in HTTPS
       - "traefik.http.routers.grafana.entrypoints=websecure"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.vps.fxhibon.fr`)"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.fxhibon.fr`)"
       - "traefik.http.routers.grafana.service=grafana"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=myresolver"

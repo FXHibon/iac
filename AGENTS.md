@@ -66,7 +66,7 @@ cd infra/ansible/
 cd infra/tofu/vps/ovh/
 tofu apply
 ```
-- Creates VPS instance and DNS records (including wildcard `*.vps.fxhibon.fr` and `traefik.vps.fxhibon.fr`).
+- Creates VPS instance and DNS records (including wildcard `*.fxhibon.fr` and `traefik.fxhibon.fr`).
 - Restricts external subdomains strictly to **IPv4 (A records)** to prevent source-IP preservation loss over Docker proxy.
 
 ### Configure VPS with Ansible
@@ -101,7 +101,7 @@ ansible-playbook -i inventory.ini playbook.yml
 
 ### Key Integration Points
 1. **Traefik → Docker**: Listens to Docker socket, auto-discovers containers on the `proxy` network.
-2. **Defense-in-Depth Dashboard**: Exposes the admin panel at `https://traefik.vps.fxhibon.fr` secured with an **IP AllowList** (limiting access to your home IPv4 and localhost) AND an **HTTP Basic Auth** layer.
+2. **Defense-in-Depth Dashboard**: Exposes the admin panel at `https://traefik.fxhibon.fr` secured with an **IP AllowList** (limiting access to your home IPv4 and localhost) AND an **HTTP Basic Auth** layer.
 3. **Prometheus → Node Exporter**: Scrapes `node-exporter:9100` (DNS resolved via Docker Compose network)
 4. **Homepage → Docker**: Mounts `/var/run/docker.sock` for widget discovery
 5. **RP5 Sync**: `rp5-internal` SSH host must be configured in local SSH config

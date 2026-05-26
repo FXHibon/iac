@@ -12,7 +12,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.fresh-fridge.entrypoints=websecure"
-      - "traefik.http.routers.fresh-fridge.rule=Host(`fresh-fridge.vps.fxhibon.fr`)"
+      - "traefik.http.routers.fresh-fridge.rule=Host(`fresh-fridge.fxhibon.fr`)"
       - "traefik.http.routers.fresh-fridge.tls=true"
       - "traefik.http.routers.fresh-fridge.tls.certresolver=myresolver"
       - "traefik.http.services.fresh-fridge.loadbalancer.server.port=3000"
