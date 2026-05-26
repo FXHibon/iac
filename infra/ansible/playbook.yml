@@ -201,6 +201,8 @@
         project_src: /home/debian/apps/traefik
         state: present
         pull: always
+        recreate: always
+        remove_orphans: true
       tags: traefik
 
     # ── Monitoring Deployment ──────────────────────────────────────────────────
@@ -243,6 +245,8 @@
         project_src: /home/debian/apps/monitoring
         state: present
         pull: always
+        recreate: always
+        remove_orphans: true
       tags: monitoring
 
     # ── Fresh-Fridge Deployment ────────────────────────────────────────────────
@@ -279,6 +283,8 @@
         project_src: /home/debian/apps/fresh-fridge
         state: present
         pull: always
+        recreate: always
+        remove_orphans: true
       become: false
       tags: fresh-fridge
 
@@ -384,6 +390,8 @@
         project_src: /home/fxhibon/apps
         state: present
         pull: always
+        recreate: always
+        remove_orphans: true
       tags: rp5
 
   handlers:
