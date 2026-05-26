@@ -14,3 +14,7 @@ scrape_configs:
   - job_name: 'traefik'
     static_configs:
       - targets: ['traefik:8080']
+
+  - job_name: 'fresh-fridge'
+    static_configs:
+      - targets: ['fresh-fridge:3000']
