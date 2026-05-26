@@ -30,6 +30,16 @@ services:
       - "traefik.http.middlewares.dashboard-ipallowlist.ipallowlist.sourcerange=REDACTED_HOME_IP/32,127.0.0.1/32"
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$16gt8564$$TIPmccK4/8STTOTgRtpVr/"
 
+      # Global block for sensitive paths (/metrics and /_health)
+      - "traefik.http.routers.block-paths.entrypoints=websecure"
+      - "traefik.http.routers.block-paths.rule=PathPrefix(`/metrics`) || PathPrefix(`/_health`)"
+      - "traefik.http.routers.block-paths.priority=10000"
+      - "traefik.http.routers.block-paths.service=api@internal"
+      - "traefik.http.routers.block-paths.tls=true"
+      - "traefik.http.routers.block-paths.tls.certresolver=myresolver"
+      - "traefik.http.routers.block-paths.middlewares=block-paths-ipallowlist"
+      - "traefik.http.middlewares.block-paths-ipallowlist.ipallowlist.sourcerange=127.0.0.1/32"
+
 networks:
   proxy:
     external: true # Réseau partagé par toutes tes futures apps

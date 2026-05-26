@@ -21,7 +21,7 @@
           - fail2ban
           - jq
           - geoip-bin
-          - nvim
+          - neovim
         state: present
 
     # ── Hostname ──────────────────────────────────────────────────────────────
@@ -128,7 +128,7 @@
           - docker-ce-cli
           - containerd.io
           - docker-compose-plugin
-          - nvim
+          - neovim
         state: present
         update_cache: true
 
@@ -236,7 +236,6 @@
         - { src: "config/prometheus.yml", dest: "config/prometheus.yml", mode: "0644" }
         - { src: "config/grafana/provisioning/datasources/datasource.yml", dest: "config/grafana/provisioning/datasources/datasource.yml", mode: "0644" }
         - { src: "config/grafana/provisioning/dashboards/dashboard.yml", dest: "config/grafana/provisioning/dashboards/dashboard.yml", mode: "0644" }
-        - { src: "dashboards/traefik.json", dest: "dashboards/traefik.json", mode: "0644" }
       tags: monitoring
 
     - name: Start Monitoring via Docker Compose
