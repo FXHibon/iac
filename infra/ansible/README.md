@@ -25,7 +25,7 @@ ansible-galaxy collection install community.general community.docker
 ## Usage
 
 ```bash
-cd ansible/
+cd infra/ansible/
 
 # Dry-run (check mode, no changes applied)
 ansible-playbook playbook.yml --check
@@ -51,7 +51,7 @@ ansible-playbook playbook.yml --tags docker
 ## File structure
 
 ```
-ansible/
+infra/ansible/
 ├── ansible.cfg       # Default settings (inventory, user, SSH key)
 ├── inventory.ini     # [vps] host group → vps.fxhibon.fr
 ├── playbook.yml      # Single playbook, idempotent
@@ -67,6 +67,16 @@ ansible-playbook playbook.yml -i "1.2.3.4," -u root --private-key ~/.ssh/other_k
 ```
 
 
+
+## Maintenance & Ad-Hoc Commands
+
+For simple, one-off maintenance tasks across all managed machines, you can use Ansible ad-hoc commands:
+
+### Update and Upgrade OS Packages
+To run `apt update && apt upgrade` in parallel on both the VPS and Raspberry Pi:
+```bash
+ansible all -i inventory.ini -m ansible.builtin.apt -a "update_cache=yes upgrade=dist" --become
+```
 
 ## Verify after provisioning
 
