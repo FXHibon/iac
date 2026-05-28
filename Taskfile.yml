@@ -60,17 +60,62 @@ tasks:
       - ./deploy.sh --tags fresh-fridge
 
   # ─── OpenTofu Infrastructure ───────────────────────────────────────────────────
+  tofu-init:
+    desc: "Initialize OpenTofu working directory with S3 backend"
+    dir: "{{.TOFU_DIR}}"
+    vars: &tofu-vars
+      AWS_ACCESS_KEY_ID:
+        sh: sops -d --extract '["backend"]["s3_access_key_id"]' {{.TASKFILE_DIR}}/infra/tofu/secrets.yaml
+      AWS_SECRET_ACCESS_KEY:
+        sh: sops -d --extract '["backend"]["s3_secret_access_key"]' {{.TASKFILE_DIR}}/infra/tofu/secrets.yaml
+    env: &tofu-env
+      AWS_ACCESS_KEY_ID: "{{.AWS_ACCESS_KEY_ID}}"
+      AWS_SECRET_ACCESS_KEY: "{{.AWS_SECRET_ACCESS_KEY}}"
+    cmds:
+      - tofu init
+
   tofu-plan:
     desc: "Generate and show the OpenTofu execution plan"
     dir: "{{.TOFU_DIR}}"
+    vars: *tofu-vars
+    env: *tofu-env
     cmds:
       - tofu plan
 
   tofu-apply:
     desc: "Build, change, or apply OpenTofu VPS infrastructure"
     dir: "{{.TOFU_DIR}}"
+    vars: *tofu-vars
+    env: *tofu-env
     cmds:
       - tofu apply
+
+  tofu-fmt:
+    desc: "Run OpenTofu formatter recursively on all configuration files"
+    dir: "{{.TASKFILE_DIR}}/infra/tofu"
+    cmds:
+      - tofu fmt -recursive .
+
+  # ─── OpenTofu Secrets Management ────────────────────────────────────────────────
+  tofu-secrets-edit:
+    desc: "Open OpenTofu secrets.yaml in your $EDITOR via sops"
+    dir: "{{.TASKFILE_DIR}}/infra/tofu"
+    cmds:
+      - sops secrets.yaml
+
+  tofu-secrets-decrypt:
+    desc: "Decrypt OpenTofu secrets.yaml to stdout"
+    dir: "{{.TASKFILE_DIR}}/infra/tofu"
+    cmds:
+      - sops -d secrets.yaml
+
+  tofu-secrets-encrypt:
+    desc: "Encrypt a file in-place using sops + age (use: task tofu-secrets-encrypt FILE=<path>)"
+    dir: "{{.TASKFILE_DIR}}/infra/tofu"
+    requires:
+      vars: [FILE]
+    cmds:
+      - sops --encrypt --in-place "{{.FILE}}"
 
   # ─── Diagnostics & Logs ────────────────────────────────────────────────────────
   vps-status:

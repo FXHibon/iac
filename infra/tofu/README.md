@@ -35,19 +35,24 @@ brew install sops age
 
 ## Usage
 
-```shell
-# Inject S3 backend credentials into your shell
-eval $(make env-print)
+All infrastructure tasks are now integrated into the root `Taskfile.yml`. You no longer need to manually inject environment variables; the tasks will dynamically decrypt and export the required S3 backend credentials via SOPS.
 
-tofu init
-tofu plan
-tofu apply
+Run these commands from the project root:
+
+```shell
+task tofu-init      # Initialize OpenTofu working directory
+task tofu-plan      # Generate and show the execution plan
+task tofu-apply     # Apply infrastructure changes
 ```
 
-### Makefile targets
+### Available Task Targets
 
-| Target                | Description                                            |
-|-----------------------|--------------------------------------------------------|
-| `make env-print`      | Print `export` commands for S3 backend credentials     |
-| `make secrets-edit`   | Edit `secrets.yaml` via SOPS in `$EDITOR`              |
-| `make secrets-decode` | Decode secrets to `.secrets.decoded.yaml` (gitignored) |
+| Task | Description |
+|------|-------------|
+| `task tofu-init` | Initialize OpenTofu working directory with S3 backend |
+| `task tofu-plan` | Generate and show the OpenTofu execution plan |
+| `task tofu-apply` | Build, change, or apply OpenTofu VPS infrastructure |
+| `task tofu-fmt` | Run OpenTofu formatter recursively on all configuration files |
+| `task tofu-secrets-edit` | Open OpenTofu secrets.yaml in your `$EDITOR` via SOPS |
+| `task tofu-secrets-decrypt` | Decrypt OpenTofu secrets.yaml and print to standard output |
+| `task tofu-secrets-encrypt FILE=<path>` | Encrypt a file in-place using SOPS + age |

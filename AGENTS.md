@@ -64,8 +64,7 @@ task deploy-rp5
 
 ### Provision OVH Infrastructure
 ```bash
-cd infra/tofu/vps/ovh/
-tofu apply
+task tofu-apply
 ```
 - Creates VPS instance and DNS records (including wildcard `*.fxhibon.fr` and `traefik.fxhibon.fr`).
 - Restricts external subdomains strictly to **IPv4 (A records)** to prevent source-IP preservation loss over Docker proxy.
