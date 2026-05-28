@@ -1,0 +1,104 @@
+version: '3'
+
+vars:
+  ANSIBLE_DIR: 'infra/ansible'
+  TOFU_DIR: 'infra/tofu/vps/ovh'
+
+tasks:
+  # ─── System Upgrades ──────────────────────────────────────────────────────────
+  upgrade-vps:
+    desc: "Update apt cache and upgrade all packages on the VPS"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ansible vps -i inventory.ini -m apt -a "upgrade=safe update_cache=yes" --become
+
+  upgrade-rp5:
+    desc: "Update apt cache and upgrade all packages on the Raspberry Pi"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ansible raspberry -i inventory.ini -m apt -a "upgrade=safe update_cache=yes" --become
+
+  upgrade-all:
+    desc: "Update and upgrade packages across all hosts (VPS + Raspberry Pi)"
+    deps: [upgrade-vps, upgrade-rp5]
+
+  # ─── Ansible Deployments ──────────────────────────────────────────────────────
+  deploy-all:
+    desc: "Deploy / update the entire infrastructure stack (VPS + Raspberry Pi)"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh
+
+  deploy-vps:
+    desc: "Deploy all applications on the VPS host group"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --limit vps
+
+  deploy-rp5:
+    desc: "Deploy / update the home lab stack on the Raspberry Pi"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags rp5
+
+  deploy-traefik:
+    desc: "Deploy / update Traefik reverse proxy only"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags traefik
+
+  deploy-monitoring:
+    desc: "Deploy / update the Monitoring stack (Loki, Alloy, Prometheus, Grafana)"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags monitoring
+
+  deploy-fresh-fridge:
+    desc: "Deploy / update the Fresh-Fridge application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags fresh-fridge
+
+  # ─── OpenTofu Infrastructure ───────────────────────────────────────────────────
+  tofu-plan:
+    desc: "Generate and show the OpenTofu execution plan"
+    dir: "{{.TOFU_DIR}}"
+    cmds:
+      - tofu plan
+
+  tofu-apply:
+    desc: "Build, change, or apply OpenTofu VPS infrastructure"
+    dir: "{{.TOFU_DIR}}"
+    cmds:
+      - tofu apply
+
+  # ─── Diagnostics & Logs ────────────────────────────────────────────────────────
+  vps-status:
+    desc: "List all running containers on the VPS host"
+    cmds:
+      - ssh vps docker ps
+
+  vps-logs:
+    desc: "Follow the logs of a container on the VPS (use: task vps-logs container=<name>)"
+    requires:
+      vars: [container]
+    cmds:
+      - ssh vps docker logs -f {{.container}}
+
+  # ─── Secrets Management ────────────────────────────────────────────────────────
+  decrypt-secrets:
+    desc: "Decrypt Ansible secrets file for manual editing or review"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - sops -d secrets.enc.yaml > secrets.decrypted.yaml
+    sources:
+      - secrets.enc.yaml
+    generates:
+      - secrets.decrypted.yaml
+
+  encrypt-secrets:
+    desc: "Encrypt manual edits back into secrets.enc.yaml and clean up local file"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - sops -e secrets.decrypted.yaml > secrets.enc.yaml
+      - rm secrets.decrypted.yaml
