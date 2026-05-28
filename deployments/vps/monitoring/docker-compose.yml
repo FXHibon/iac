@@ -52,6 +52,7 @@ services:
       - ./grafana-data:/var/lib/grafana
       - ./config/grafana/provisioning/datasources/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
       - ./config/grafana/provisioning/dashboards/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_AUTH_ANONYMOUS_ENABLED=false
@@ -70,6 +71,41 @@ services:
       - "traefik.http.routers.grafana.middlewares=grafana-ipallowlist"
       - "traefik.http.middlewares.grafana-ipallowlist.ipallowlist.sourcerange=REDACTED_HOME_IP/32,127.0.0.1/32"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  docker-stats-exporter:
+    image: wywywywy/docker_stats_exporter:latest
+    container_name: docker-stats-exporter
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    restart: unless-stopped
+    user: "1000"
+    volumes:
+      - ./config/loki/loki.yml:/etc/loki/loki.yml:ro
+      - ./loki-data:/loki
+    command: -config.file=/etc/loki/loki.yml
+    networks:
+      - proxy
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./config/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    networks:
+      - proxy
+
+
 
 networks:
   proxy:

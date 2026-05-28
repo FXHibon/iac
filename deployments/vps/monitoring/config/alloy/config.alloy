@@ -1,0 +1,44 @@
+// 1. Discover Docker containers
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// 2. Relabel metadata and filter target containers
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  // Drop Alloy's own logs to prevent infinite loop
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex = "/alloy"
+    action = "drop"
+  }
+
+  // Extract container name (without leading slash) as label 'container'
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex = "/(.*)"
+    target_label = "container"
+  }
+
+  // Add static job label 'docker-logs'
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label = "job"
+    replacement = "docker-logs"
+  }
+}
+
+// 3. Scrape logs from Docker API via socket
+loki.source.docker "docker_logs" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  forward_to = [loki.write.local.receiver]
+}
+
+// 4. Forward log streams to Loki
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

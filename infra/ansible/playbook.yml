@@ -221,9 +221,12 @@
         - /home/debian/apps/monitoring/config/grafana/provisioning
         - /home/debian/apps/monitoring/config/grafana/provisioning/datasources
         - /home/debian/apps/monitoring/config/grafana/provisioning/dashboards
+        - /home/debian/apps/monitoring/config/loki
+        - /home/debian/apps/monitoring/config/alloy
         - /home/debian/apps/monitoring/dashboards
         - /home/debian/apps/monitoring/prometheus-data
         - /home/debian/apps/monitoring/grafana-data
+        - /home/debian/apps/monitoring/loki-data
       tags: monitoring
 
     - name: Copy Monitoring configuration files
@@ -238,6 +241,9 @@
         - { src: "config/prometheus.yml", dest: "config/prometheus.yml", mode: "0644" }
         - { src: "config/grafana/provisioning/datasources/datasource.yml", dest: "config/grafana/provisioning/datasources/datasource.yml", mode: "0644" }
         - { src: "config/grafana/provisioning/dashboards/dashboard.yml", dest: "config/grafana/provisioning/dashboards/dashboard.yml", mode: "0644" }
+        - { src: "dashboards/docker-containers.json", dest: "dashboards/docker-containers.json", mode: "0644" }
+        - { src: "config/loki/loki.yml", dest: "config/loki/loki.yml", mode: "0644" }
+        - { src: "config/alloy/config.alloy", dest: "config/alloy/config.alloy", mode: "0644" }
       tags: monitoring
 
     - name: Start Monitoring via Docker Compose

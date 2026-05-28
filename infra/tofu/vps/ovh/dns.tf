@@ -64,6 +64,7 @@ resource "ovh_domain_zone_record" "grafana_vps_record_v4" {
   target    = tolist(data.ovh_vps.main_vps.ips)[1]
 }
 
+
 # Wildcard for all other services on the VPS (e.g. *.vps.fxhibon.fr)
 resource "ovh_domain_zone_record" "wildcard_vps_record_v4" {
   zone      = ovh_domain_name.root_domain.domain_name

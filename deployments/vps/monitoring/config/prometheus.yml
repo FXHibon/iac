@@ -18,3 +18,7 @@ scrape_configs:
   - job_name: 'fresh-fridge'
     static_configs:
       - targets: ['fresh-fridge:3000']
+
+  - job_name: 'docker-stats-exporter'
+    static_configs:
+      - targets: ['docker-stats-exporter:9487']
