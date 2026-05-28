@@ -22,22 +22,24 @@ Infrastructure as Code (IaC) for a personal local homelab and public OVH VPS —
 | **[infra/tofu/](infra/tofu/)** | OpenTofu | Provisions the OVH VPS instance and configures DNS (A records, wildcards). |
 | **[infra/ansible/](infra/ansible/)** | Ansible | Hardens SSH, installs UFW/Fail2Ban, configures Docker, and orchestrates container stack deployments. |
 | **[deployments/vps/traefik/](deployments/vps/traefik/)** | Docker Compose / Traefik v3.7 | Exposes VPS containers publicly with auto Let's Encrypt SSL and defense-in-depth security. |
-| **[deployments/vps/monitoring/](deployments/vps/monitoring/)** | Docker Compose / Prometheus / Grafana | Scrapes metrics and displays dashboards for the VPS host and services. |
+| **[deployments/vps/monitoring/](deployments/vps/monitoring/)** | Docker Compose / Prometheus / Grafana / Loki / Alloy / docker-stats-exporter | Scrapes VPS metrics (via docker-stats-exporter), aggregates logs dynamically (via Alloy + Loki), and hosts the unified dashboards. |
 | **[deployments/vps/fresh-fridge/](deployments/vps/fresh-fridge/)** | Docker Compose / Node.js | Private web application deployed securely on the VPS. |
 | **[deployments/rp5/](deployments/rp5/)** | Docker Compose | Deploys local home-monitoring (Grafana, Prometheus) and media services (Plex, Transmission). |
 
 ---
 
-## Deployment Workflows
+## Deployment & Management Workflows
 
-All host configuration and container stacks are orchestrated from the unified Ansible management folder.
+The repository uses **Taskfile** (https://taskfile.dev/) as a local developer runner to orchestrate OpenTofu, Ansible, and Docker commands from the project root.
 
 ### 1. Compute & DNS Provisioning (OpenTofu)
 Build the VPS and domain records. Subdomains are routed exclusively via IPv4 to preserve real client IPs for whitelists:
 ```bash
-cd infra/tofu/vps/ovh/
-tofu init
-tofu apply
+# Generate the execution plan
+task tofu-plan
+
+# Build or apply changes to OVH VPS infrastructure
+task tofu-apply
 ```
 
 ### 2. Post-Provision Hardening & System Setup (Ansible)
@@ -51,25 +53,38 @@ ansible-galaxy collection install community.general community.docker
 ansible-playbook -i inventory.ini playbook.yml
 ```
 
-### 3. Orchestrate Applications & Deployments (Ansible Tags)
-Deploy specific application stacks or everything at once using tags inside the unified Ansible setup:
+### 3. Orchestrate Applications & Deployments (Taskfile / Ansible)
+Deploy specific application stacks, upgrade system packages, or manage secrets securely using Taskfile commands:
 ```bash
-cd infra/ansible/
+# Deploy/update the entire VPS + Raspberry Pi stack
+task deploy-all
+
+# Deploy all applications on the VPS (Traefik, Monitoring, Fresh-Fridge)
+task deploy-vps
 
 # Deploy/update Traefik reverse proxy only
-./deploy.sh --tags traefik
+task deploy-traefik
 
-# Deploy/update Monitoring stack only
-./deploy.sh --tags monitoring
+# Deploy/update the VPS Monitoring stack (Loki, Alloy, Prometheus, Grafana, docker-stats-exporter)
+task deploy-monitoring
 
-# Deploy/update Fresh-Fridge application (with secure in-memory SOPS secrets)
-./deploy.sh --tags fresh-fridge
+# Deploy/update Fresh-Fridge application (with automatic secure SOPS secrets lookup)
+task deploy-fresh-fridge
 
 # Deploy/update the entire Raspberry Pi (rp5) home lab stack
-./deploy.sh --tags rp5
+task deploy-rp5
+```
 
-# Run the complete configuration and deploy all stacks across both hosts
-./deploy.sh
+### 4. System Upgrades & Diagnostics
+```bash
+# Upgrade all packages on the VPS and Raspberry Pi in parallel
+task upgrade-all
+
+# Check live container statuses on the VPS
+task vps-status
+
+# Follow live container logs over SSH
+task vps-logs container=alloy
 ```
 
 ---

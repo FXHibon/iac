@@ -6,8 +6,9 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 - **Compute provisioning**: OpenTofu (formerly Terraform) managing OVH VPS and DNS
 - **System configuration**: Ansible playbooks for package installation, security, Docker setup, and Traefik provisioning
 - **Application deployment**: Docker Compose services across RP5 and VPS
-- **Traffic ingestion**: Traefik reverse proxy with auto SSL/TLS (ACME)
-- **Monitoring stack**: Prometheus + Grafana + Node Exporter
+- **Traffic ingestion**: Traefik reverse proxy with auto Let's Encrypt SSL/TLS
+- **Monitoring & Metrics**: Prometheus + Grafana + Node Exporter + socket-based `docker-stats-exporter`
+- **Log Aggregation**: Grafana Loki (30d retention) + dynamic Grafana Alloy log shipper
 - **Dashboard**: Homepage service + supporting apps (Transmission with VPN, Plex)
 
 ## Architecture Patterns
@@ -29,6 +30,7 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 - **Docker Compose structure**: Each service group has a separate compose file under `deployments/` (`vps/traefik/`, `rp5/`).
 - **Port mapping**: Services expose container ports internally; Traefik routes via Docker labels (e.g., `traefik.enable=true`).
   - Homepage: 3001, Prometheus: 9090, Grafana: 3000, Transmission: 9091, Node Exporter: 9100.
+  - Internal Services (No Traefik Routing): `docker-stats-exporter` listens internally on `9487`, `loki` listens internally on `3100`, and `alloy` runs internally.
   - Traefik: exposes public `80` (HTTP) and `443` (HTTPS) ports. The admin panel (`api@internal`) is secured and never exposed on a host port.
 
 ### Configuration Management
@@ -38,28 +40,27 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 
 ## Critical Workflows
 
-### Deploy Stacks and Applications (Unified Ansible Workflow)
-All container stacks are deployed and orchestrated using tags within the unified Ansible playbook:
+### Deploy Stacks and Applications (Taskfile / Ansible Workflow)
+All container stacks are deployed, updated, and orchestrated using task runner commands from the project root:
 ```bash
-cd infra/ansible/
+# Deploy/update the entire infrastructure stack (VPS + Raspberry Pi)
+task deploy-all
 
 # Deploy/update Traefik reverse proxy only
-./deploy.sh --tags traefik
+task deploy-traefik
 
-# Deploy/update Monitoring stack only
-./deploy.sh --tags monitoring
+# Deploy/update the VPS Monitoring stack (Loki, Alloy, Prometheus, Grafana, docker-stats-exporter)
+task deploy-monitoring
 
-# Deploy/update Fresh-Fridge application (with automatic secure SOPS secrets lookup)
-./deploy.sh --tags fresh-fridge
+# Deploy/update the Fresh-Fridge application (with secure in-memory SOPS secrets)
+task deploy-fresh-fridge
 
 # Deploy/update the entire Raspberry Pi (rp5) home lab stack
-./deploy.sh --tags rp5
-
-# Run the complete configuration and deploy all stacks across VPS and RP5
-./deploy.sh
+task deploy-rp5
 ```
-- **Idempotent Deployments**: Ansible ensures directories exist, copies configuration files only when they change, sets appropriate file permissions (e.g. `acme.json` 0600), and restarts containers only when configuration shifts.
-- **Secure Secrets Handling**: Decrypts secrets in-memory during playbook execution, completely avoiding writing temporary unencrypted files to local disk.
+- **Performance Optimizations**: Playbook executions are extremely fast thanks to enabled **SSH pipelining**, **ControlPersist SSH multiplexing**, and local **fact caching** inside `ansible.cfg`.
+- **Idempotent Deployments**: Ansible ensures host folders exist, copies configurations only when changed, enforces secure permissions (e.g. `acme.json` `0600`), and restarts containers only upon configuration shifts.
+- **Secure Secrets Handling**: Decrypts secrets in-memory using SOPS during playbook execution, avoiding writing temporary unencrypted files to local disk.
 
 ### Provision OVH Infrastructure
 ```bash
@@ -123,6 +124,9 @@ ansible-playbook -i inventory.ini playbook.yml
 
 ## Common Pitfalls & Debugging
 
+- **Docker containerd-snapshotter (cAdvisor / Promtail File Scrape Failures)**: Modern Docker engines configured with containerd snapshotters (`io.containerd.snapshotter.v1.overlayfs`) relocate container layer metadata and logs. This breaks low-level filesystem inspection tools like `cAdvisor` (giving read-write layer open errors) and Promtail direct-file scraping.
+  * **Solution for Metrics**: Use Docker API socket-based stats scrapers such as `wywywywy/docker_stats_exporter` which communicate via `/var/run/docker.sock` and are completely immune to underlying storage drivers.
+  * **Solution for Logs**: Use modern `Grafana Alloy` with the `discovery.docker` and `loki.source.docker` components. These tail logs cleanly over the Docker API socket, avoiding host log file mounts and storage driver dependency issues.
 - **Docker IPv6 Source IP Loss (403 Forbidden)**: If external services have `AAAA` (IPv6) records, browsers connect via IPv6. Because the Docker bridge network does not support IPv6 by default, `docker-proxy` translates the traffic to IPv4 and rewrites the source IP to the bridge gateway (`172.18.0.1`), causing IP Whitelists to return 403. **Solution**: Only use `A` (IPv4) records in `dns.tf` for whitelisted domains to preserve the real client IP.
 - **Traefik ACME**: `acme.json` must have strictly `0600` permissions; Ansible enforces this.
 - **Docker network**: `proxy` network must be created before Traefik or service startup (Ansible handles this).
