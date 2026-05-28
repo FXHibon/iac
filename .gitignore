@@ -32,3 +32,8 @@ traefik/data/acme.json
 .env
 *.decrypted.env
 *.decrypted
+
+# Local Ansible cache
+.ansible_fact_cache/
+infra/ansible/.ansible_fact_cache/
+
