@@ -128,3 +128,32 @@ curl -v -H "Content-Type: application/json" -d '[
   }
 ]' http://localhost:9093/api/v2/alerts
 ```
+
+---
+
+## Dependency Management (Renovate)
+
+This project uses [Renovate](https://docs.renovatebot.com/) to automatically check and update external components (Docker Compose image tags and OpenTofu provider versions). 
+
+The configuration in [`renovate.json`](renovate.json) specifies the update policies:
+- **Auto-Discovery:** Automatically scans all `docker-compose.yml` and `.tf` files recursively.
+- **Grouping:** Groups all minor and patch updates together (into a single update) to minimize noise.
+- **Major Upgrades:** Requires explicit approval for major upgrades because they may contain breaking changes.
+
+### Running Renovate Locally
+
+Using the configured `Taskfile.yml` tasks, you can run Renovate locally in dry-run mode to audit packages or run it in write mode to automatically update the files on your disk:
+
+```bash
+# 1. Audit your dependencies (Dry-run / Lookup mode - Read Only)
+task renovate-check
+
+# 2. Automatically apply available updates directly to your local files
+task renovate-apply
+```
+
+### Git Platform Integration (Optional)
+For complete hands-free automation, you can enable Renovate on your git hosting provider:
+- **GitHub:** Install the [Renovate GitHub App](https://github.com/apps/renovate). It will read your `renovate.json` and automatically open daily/weekly Pull Requests for updates.
+- **Self-Hosted / CI Pipelines:** You can run it inside a scheduled pipeline (e.g. GitHub Actions, GitLab CI) using the official Renovate runner images.
+

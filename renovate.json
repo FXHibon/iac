@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "onboarding": false,
+  "docker-compose": {
+    "enabled": true,
+    "fileMatch": [
+      "(^|/)docker-compose[^/]*\\.ya?ml$"
+    ]
+  },
+  "terraform": {
+    "enabled": true,
+    "fileMatch": [
+      "\\.tf$"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Group all minor and patch updates together to reduce noise",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "All non-major updates",
+      "groupSlug": "non-major"
+    },
+    {
+      "description": "Group OpenTofu provider updates",
+      "matchManagers": ["terraform"],
+      "groupName": "OpenTofu Providers"
+    },
+    {
+      "description": "Require manual approval for major upgrades to avoid breaking changes",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}

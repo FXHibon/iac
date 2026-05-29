@@ -147,3 +147,17 @@ tasks:
     cmds:
       - sops -e secrets.decrypted.yaml > secrets.enc.yaml
       - rm secrets.decrypted.yaml
+
+  # ─── Dependency Management ──────────────────────────────────────────────────
+  renovate-check:
+    desc: "Scan repository and show available updates (dry-run/lookup only)"
+    cmds:
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local renovate/renovate --onboarding=false --dry-run=lookup
+
+  renovate-apply:
+    desc: "Scan repository and write version updates directly to files"
+    cmds:
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local renovate/renovate --onboarding=false
+
+
+
