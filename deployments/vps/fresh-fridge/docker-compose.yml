@@ -16,6 +16,7 @@ services:
       - "traefik.http.routers.fresh-fridge.tls=true"
       - "traefik.http.routers.fresh-fridge.tls.certresolver=myresolver"
       - "traefik.http.services.fresh-fridge.loadbalancer.server.port=3000"
+      - "traefik.http.routers.fresh-fridge.middlewares=global-ratelimit,crowdsec-bouncer"
 
 networks:
   proxy:

@@ -3,7 +3,6 @@
   "extends": [
     "config:recommended"
   ],
-  "onboarding": false,
   "docker-compose": {
     "enabled": true,
     "fileMatch": [

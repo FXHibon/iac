@@ -15,6 +15,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Pour écouter Docker
       - ./data/traefik.yml:/traefik.yml:ro           # Config statique
       - ./data/acme.json:/acme.json                  # Stockage des certifs SSL
+      - ./logs:/var/log/traefik                      # Dossier partagé pour les logs d'accès
     networks:
       - proxy
     labels:
@@ -25,10 +26,21 @@ services:
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
-      # Restriction d'accès par IP (IPAllowList) + Basic Auth (Defense-in-depth)
-      - "traefik.http.routers.dashboard.middlewares=dashboard-ipallowlist,dashboard-auth"
+      # Restriction d'accès par IP (IPAllowList) + Basic Auth + Rate Limit + CrowdSec
+      - "traefik.http.routers.dashboard.middlewares=global-ratelimit,crowdsec-bouncer,dashboard-ipallowlist,dashboard-auth"
       - "traefik.http.middlewares.dashboard-ipallowlist.ipallowlist.sourcerange=REDACTED_HOME_IP/32,127.0.0.1/32"
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$16gt8564$$TIPmccK4/8STTOTgRtpVr/"
+
+      # Middleware : RateLimit global (30 req/s moyenne, burst à 100)
+      - "traefik.http.middlewares.global-ratelimit.ratelimit.average=30"
+      - "traefik.http.middlewares.global-ratelimit.ratelimit.burst=100"
+
+      # Middleware : CrowdSec Bouncer (Vérifie les requêtes en temps réel auprès de CrowdSec LAPI)
+      - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.enabled=true"
+      - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdseclapiurl=http://crowdsec:8080/"
+      - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.crowdseclapikey=${CROWDSEC_BOUNCER_KEY}"
+      - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.updateIntervalSeconds=10"
+      - "traefik.http.middlewares.crowdsec-bouncer.plugin.crowdsec-bouncer.defaultDecisionSeconds=3600"
 
       # Global block for sensitive paths (/metrics and /_health)
       - "traefik.http.routers.block-paths.entrypoints=websecure"
@@ -39,6 +51,21 @@ services:
       - "traefik.http.routers.block-paths.tls.certresolver=myresolver"
       - "traefik.http.routers.block-paths.middlewares=block-paths-ipallowlist"
       - "traefik.http.middlewares.block-paths-ipallowlist.ipallowlist.sourcerange=127.0.0.1/32"
+
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    container_name: crowdsec
+    restart: always
+    environment:
+      - COLLECTIONS=crowdsecurity/traefik crowdsecurity/sshd crowdsecurity/http-cve
+      - GID=1000
+    volumes:
+      - ./logs:/var/log/traefik:ro
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - ./crowdsec/config:/etc/crowdsec
+      - ./crowdsec/data:/var/lib/crowdsec/data
+    networks:
+      - proxy
 
 networks:
   proxy:

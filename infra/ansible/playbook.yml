@@ -171,6 +171,10 @@
         - /home/debian/apps
         - /home/debian/apps/traefik
         - /home/debian/apps/traefik/data
+        - /home/debian/apps/traefik/logs
+        - /home/debian/apps/traefik/crowdsec
+        - /home/debian/apps/traefik/crowdsec/config
+        - /home/debian/apps/traefik/crowdsec/data
       tags: traefik
 
     - name: Copy Traefik configuration files
@@ -185,6 +189,24 @@
         - { src: "data/traefik.yml", dest: "data/traefik.yml", mode: "0644" }
       tags: traefik
 
+    - name: Create CrowdSec acquis.yaml configuration
+      ansible.builtin.copy:
+        dest: /home/debian/apps/traefik/crowdsec/acquis.yaml
+        owner: debian
+        group: debian
+        mode: "0644"
+        content: |
+          filenames:
+            - /var/log/traefik/access.log
+          labels:
+            type: traefik
+          ---
+          filenames:
+            - /var/log/auth.log
+          labels:
+            type: syslog
+      tags: traefik
+
     - name: Ensure acme.json exists with correct permissions
       ansible.builtin.file:
         path: /home/debian/apps/traefik/data/acme.json
@@ -194,6 +216,70 @@
         mode: "0600"
         modification_time: preserve
         access_time: preserve
+      tags: traefik
+
+    - name: Ensure access.log exists with correct permissions
+      ansible.builtin.file:
+        path: /home/debian/apps/traefik/logs/access.log
+        state: touch
+        owner: debian
+        group: debian
+        mode: "0644"
+        modification_time: preserve
+        access_time: preserve
+      tags: traefik
+
+    - name: Check if Traefik .env file exists
+      ansible.builtin.stat:
+        path: /home/debian/apps/traefik/.env
+      register: traefik_env_file
+      tags: traefik
+
+    - name: Create Traefik .env file with placeholder if it doesn't exist
+      ansible.builtin.copy:
+        dest: /home/debian/apps/traefik/.env
+        content: "CROWDSEC_BOUNCER_KEY=placeholder_setup\n"
+        owner: debian
+        group: debian
+        mode: "0600"
+      when: not traefik_env_file.stat.exists
+      tags: traefik
+
+    - name: Dynamic CrowdSec Bouncer Key Generation and Registration
+      ansible.builtin.shell: |
+        set -e
+        # 1. Check if we already have a real key (not placeholder)
+        if [ -f /home/debian/apps/traefik/.env ] && grep -q "CROWDSEC_BOUNCER_KEY=" /home/debian/apps/traefik/.env && ! grep -q "placeholder_setup" /home/debian/apps/traefik/.env; then
+            echo "Bouncer key already set in .env"
+            exit 0
+        fi
+
+        # 2. Start only the crowdsec service first to register the bouncer
+        docker compose -f /home/debian/apps/traefik/docker-compose.yml up -d crowdsec
+
+        # 3. Wait for crowdsec to be ready and database to initialize
+        for i in {1..15}; do
+            if docker exec crowdsec cscli bouncers list >/dev/null 2>&1; then
+                break
+            fi
+            sleep 2
+        done
+
+        # 4. Check if bouncer already exists in CrowdSec database, delete it if so
+        if docker exec crowdsec cscli bouncers list | grep -q "traefik-bouncer"; then
+            docker exec crowdsec cscli bouncers delete traefik-bouncer
+        fi
+
+        # 5. Generate a new raw bouncer key
+        KEY=$(docker exec crowdsec cscli bouncers add traefik-bouncer -o raw)
+
+        # 6. Save key to .env file
+        echo "CROWDSEC_BOUNCER_KEY=$KEY" > /home/debian/apps/traefik/.env
+        chmod 0600 /home/debian/apps/traefik/.env
+        chown debian:debian /home/debian/apps/traefik/.env
+        echo "Successfully generated and saved CrowdSec bouncer key"
+      register: crowdsec_key_generation
+      changed_when: "'Successfully generated' in crowdsec_key_generation.stdout"
       tags: traefik
 
     - name: Start Traefik via Docker Compose
