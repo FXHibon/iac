@@ -4,6 +4,20 @@
   become: true
 
   tasks:
+    - name: Resolve current home IP address dynamically
+      ansible.builtin.command: dig +short home.fxhibon.fr
+      delegate_to: localhost
+      run_once: true
+      register: home_ip_dns
+      changed_when: false
+      become: false
+      tags: always
+
+    - name: Set home IP fact
+      ansible.builtin.set_fact:
+        current_home_ip: "{{ home_ip_dns.stdout }}"
+      tags: always
+
     # ── System ────────────────────────────────────────────────────────────────
 
     - name: Update apt cache
@@ -177,16 +191,22 @@
         - /home/debian/apps/traefik/crowdsec/data
       tags: traefik
 
-    - name: Copy Traefik configuration files
+    - name: Copy Traefik static configuration
       ansible.builtin.copy:
-        src: "../../deployments/vps/traefik/{{ item.src }}"
-        dest: "/home/debian/apps/traefik/{{ item.dest }}"
+        src: "../../deployments/vps/traefik/data/traefik.yml"
+        dest: "/home/debian/apps/traefik/data/traefik.yml"
         owner: debian
         group: debian
-        mode: "{{ item.mode }}"
-      loop:
-        - { src: "docker-compose.yml", dest: "docker-compose.yml", mode: "0644" }
-        - { src: "data/traefik.yml", dest: "data/traefik.yml", mode: "0644" }
+        mode: "0644"
+      tags: traefik
+
+    - name: Render Traefik docker-compose template
+      ansible.builtin.template:
+        src: "../../deployments/vps/traefik/docker-compose.yml"
+        dest: "/home/debian/apps/traefik/docker-compose.yml"
+        owner: debian
+        group: debian
+        mode: "0644"
       tags: traefik
 
     - name: Create CrowdSec acquis.yaml configuration
@@ -323,13 +343,21 @@
         group: debian
         mode: "{{ item.mode }}"
       loop:
-        - { src: "docker-compose.yml", dest: "docker-compose.yml", mode: "0644" }
         - { src: "config/prometheus.yml", dest: "config/prometheus.yml", mode: "0644" }
         - { src: "config/grafana/provisioning/datasources/datasource.yml", dest: "config/grafana/provisioning/datasources/datasource.yml", mode: "0644" }
         - { src: "config/grafana/provisioning/dashboards/dashboard.yml", dest: "config/grafana/provisioning/dashboards/dashboard.yml", mode: "0644" }
         - { src: "dashboards/docker-containers.json", dest: "dashboards/docker-containers.json", mode: "0644" }
         - { src: "config/loki/loki.yml", dest: "config/loki/loki.yml", mode: "0644" }
         - { src: "config/alloy/config.alloy", dest: "config/alloy/config.alloy", mode: "0644" }
+      tags: monitoring
+
+    - name: Render Monitoring docker-compose template
+      ansible.builtin.template:
+        src: "../../deployments/vps/monitoring/docker-compose.yml"
+        dest: "/home/debian/apps/monitoring/docker-compose.yml"
+        owner: debian
+        group: debian
+        mode: "0644"
       tags: monitoring
 
     - name: Start Monitoring via Docker Compose
@@ -364,7 +392,16 @@
     - name: Create fresh-fridge .env file
       ansible.builtin.copy:
         dest: /home/debian/apps/fresh-fridge/.env
-        content: "GEMINI_API_KEY={{ fresh_fridge_gemini_api_key }}\n"
+        content: |
+          GEMINI_API_KEY={{ fresh_fridge_gemini_api_key }}
+          POSTGRES_USER={{ fresh_fridge_postgres_user }}
+          POSTGRES_PASSWORD={{ fresh_fridge_postgres_password }}
+          POSTGRES_DB={{ fresh_fridge_postgres_db }}
+          POSTGRES_HOST=db
+          POSTGRES_PORT=5432
+          DB_HOST=db
+          DB_PORT=5432
+          DATABASE_URL=postgresql://{{ fresh_fridge_postgres_user }}:{{ fresh_fridge_postgres_password }}@db:5432/{{ fresh_fridge_postgres_db }}
         owner: debian
         group: debian
         mode: "0600"
@@ -475,6 +512,28 @@
         owner: fxhibon
         group: fxhibon
         mode: "0755"
+      tags: rp5
+
+    - name: Template Alertmanager configuration
+      ansible.builtin.template:
+        src: ../../deployments/rp5/alertmanager/alertmanager.yml.j2
+        dest: /home/fxhibon/apps/alertmanager/alertmanager.yml
+        owner: fxhibon
+        group: fxhibon
+        mode: "0600"
+      tags: rp5
+
+    - name: Create RP5 .env file
+      ansible.builtin.copy:
+        dest: /home/fxhibon/apps/.env
+        content: |
+          TRANSMISSION_VPN_USERNAME={{ transmission_vpn_username }}
+          TRANSMISSION_VPN_PASSWORD={{ transmission_vpn_password }}
+          PLEX_TOKEN={{ plex_token }}
+          GF_SECURITY_ADMIN_PASSWORD={{ rp5_grafana_admin_password }}
+        owner: fxhibon
+        group: fxhibon
+        mode: "0600"
       tags: rp5
 
     - name: Start RP5 Docker stack

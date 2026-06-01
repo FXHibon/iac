@@ -1,6 +1,6 @@
 services:
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.11.1
     container_name: node-exporter
     restart: unless-stopped
     volumes:
@@ -16,7 +16,7 @@ services:
       - proxy
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.12.0
     container_name: prometheus
     restart: unless-stopped
     user: "1000:1000"
@@ -39,12 +39,12 @@ services:
       - "traefik.http.routers.prometheus.tls.certresolver=myresolver"
       # Restriction: IP AllowList (Home IP) + Basic Auth (reusing Traefik admin hash)
       - "traefik.http.routers.prometheus.middlewares=prometheus-ipallowlist,prometheus-auth"
-      - "traefik.http.middlewares.prometheus-ipallowlist.ipallowlist.sourcerange=REDACTED_HOME_IP/32,127.0.0.1/32"
+      - "traefik.http.middlewares.prometheus-ipallowlist.ipallowlist.sourcerange={{ current_home_ip }}/32,127.0.0.1/32"
       - "traefik.http.middlewares.prometheus-auth.basicauth.users=admin:$$apr1$$16gt8564$$TIPmccK4/8STTOTgRtpVr/"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.0.1
     container_name: grafana
     restart: unless-stopped
     user: "1000"
@@ -69,11 +69,11 @@ services:
       - "traefik.http.routers.grafana.tls.certresolver=myresolver"
       # Restriction: IP AllowList (Home IP)
       - "traefik.http.routers.grafana.middlewares=grafana-ipallowlist"
-      - "traefik.http.middlewares.grafana-ipallowlist.ipallowlist.sourcerange=REDACTED_HOME_IP/32,127.0.0.1/32"
+      - "traefik.http.middlewares.grafana-ipallowlist.ipallowlist.sourcerange={{ current_home_ip }}/32,127.0.0.1/32"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   docker-stats-exporter:
-    image: wywywywy/docker_stats_exporter:latest
+    image: wywywywy/docker_stats_exporter:20220516
     container_name: docker-stats-exporter
     restart: unless-stopped
     volumes:
@@ -94,7 +94,7 @@ services:
       - proxy
 
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.16.1
     container_name: alloy
     restart: unless-stopped
     user: root

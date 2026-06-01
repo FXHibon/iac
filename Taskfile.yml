@@ -10,13 +10,13 @@ tasks:
     desc: "Update apt cache and upgrade all packages on the VPS"
     dir: "{{.ANSIBLE_DIR}}"
     cmds:
-      - ansible vps -i inventory.ini -m apt -a "upgrade=safe update_cache=yes" --become
+      - ansible vps -i inventory.ini -m apt -a "upgrade=safe update_cache=yes autoremove=yes" --become
 
   upgrade-rp5:
     desc: "Update apt cache and upgrade all packages on the Raspberry Pi"
     dir: "{{.ANSIBLE_DIR}}"
     cmds:
-      - ansible raspberry -i inventory.ini -m apt -a "upgrade=safe update_cache=yes" --become
+      - ansible raspberry -i inventory.ini -m apt -a "upgrade=safe update_cache=yes autoremove=yes" --become
 
   upgrade-all:
     desc: "Update and upgrade packages across all hosts (VPS + Raspberry Pi)"
@@ -151,13 +151,22 @@ tasks:
   # ─── Dependency Management ──────────────────────────────────────────────────
   renovate-check:
     desc: "Scan repository and show available updates (dry-run/lookup only)"
+    vars: &renovate-vars
+      DOCKER_USERNAME:
+        sh: sops -d --extract '["docker_username"]' {{.TASKFILE_DIR}}/infra/ansible/secrets.enc.yaml
+      DOCKER_PASSWORD:
+        sh: sops -d --extract '["docker_password"]' {{.TASKFILE_DIR}}/infra/ansible/secrets.enc.yaml
+    env: &renovate-env
+      RENOVATE_HOST_RULES: '[{"hostType": "docker", "matchHost": "docker.io", "username": "{{.DOCKER_USERNAME}}", "password": "{{.DOCKER_PASSWORD}}"}]'
     cmds:
-      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local renovate/renovate --onboarding=false --dry-run=lookup
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES renovate/renovate --onboarding=false --dry-run=lookup
 
   renovate-apply:
     desc: "Scan repository and write version updates directly to files"
+    vars: *renovate-vars
+    env: *renovate-env
     cmds:
-      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local renovate/renovate --onboarding=false
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES renovate/renovate --onboarding=false
 
 
 

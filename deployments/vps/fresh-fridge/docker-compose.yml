@@ -1,14 +1,15 @@
-version: '3.8'
-
 services:
   app:
-    image: fxhibon/fresh-fridge:master
+    image: fxhibon/fresh-fridge:0.0.8
     container_name: fresh-fridge
     restart: unless-stopped
     env_file:
       - .env
     networks:
       - proxy
+    depends_on:
+      db:
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.fresh-fridge.entrypoints=websecure"
@@ -17,6 +18,22 @@ services:
       - "traefik.http.routers.fresh-fridge.tls.certresolver=myresolver"
       - "traefik.http.services.fresh-fridge.loadbalancer.server.port=3000"
       - "traefik.http.routers.fresh-fridge.middlewares=global-ratelimit,crowdsec-bouncer"
+
+  db:
+    image: postgres:18-alpine
+    container_name: fresh-fridge-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/18/data
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   proxy:
