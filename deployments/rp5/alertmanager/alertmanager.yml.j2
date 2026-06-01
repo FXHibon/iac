@@ -13,9 +13,9 @@ route:
 receivers:
   - name: 'telegram'
     telegram_configs:
-      - bot_token: 'REDACTED_TELEGRAM_TOKEN'
-        chat_id: REDACTED_CHAT_ID
+      - bot_token: '{{ rp5_telegram_bot_token }}'
+        chat_id: {{ rp5_telegram_chat_id }}
         send_resolved: true
         parse_mode: 'HTML'
-        message: '{{ template "telegram.text" . }}'
+        message: '{% raw %}{{ template "telegram.text" . }}{% endraw %}'
 

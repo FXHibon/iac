@@ -6,7 +6,7 @@
         description: Dashboards & Metrics
         container: grafana
         username: admin
-        password: REDACTED_GRAFANA_PASSWORD
+        password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
     - Prometheus:
         icon: prometheus.png
         href: http://192.168.1.59:9090
@@ -23,7 +23,7 @@
         widget:
           type: plex
           url: http://192.168.1.59:32400
-          key: REDACTED_PLEX_TOKEN
+          key: "{{HOMEPAGE_VAR_PLEX_TOKEN}}"
     - Transmission:
         icon: transmission.png
         description: Download Manager
