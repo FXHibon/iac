@@ -19,3 +19,24 @@ resource "ovh_cloud_project_storage" "tofu_state_storage" {
     status = "enabled"
   }
 }
+
+resource "ovh_cloud_project_user_s3_policy" "s3_user_policy" {
+  service_name = ovh_cloud_project_user.s3_user.service_name
+  user_id      = ovh_cloud_project_user.s3_user.id
+  policy       = jsonencode({
+    Statement = [
+      {
+        Sid      = "AllowAllS3Actions"
+        Effect   = "Allow"
+        Action   = ["s3:*"]
+        Resource = [
+          "arn:aws:s3:::hulking-weinberg",
+          "arn:aws:s3:::hulking-weinberg/*",
+          "arn:aws:s3:::backups-fxhibon",
+          "arn:aws:s3:::backups-fxhibon/*"
+        ]
+      }
+    ]
+  })
+}
+

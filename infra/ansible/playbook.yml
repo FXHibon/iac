@@ -36,6 +36,8 @@
           - jq
           - geoip-bin
           - neovim
+          - python3-debian
+          - tree
         state: present
 
     # ── Hostname ──────────────────────────────────────────────────────────────
@@ -107,6 +109,27 @@
         port: "443"
         proto: tcp
 
+    - name: Allow Satisfactory UDP
+      community.general.ufw:
+        rule: allow
+        port: "7777"
+        proto: udp
+      tags: satisfactory, firewall
+
+    - name: Allow Satisfactory TCP
+      community.general.ufw:
+        rule: allow
+        port: "7777"
+        proto: tcp
+      tags: satisfactory, firewall
+
+    - name: Allow Satisfactory TCP
+      community.general.ufw:
+        rule: allow
+        port: "8888"
+        proto: tcp
+      tags: satisfactory, firewall
+
     - name: Enable UFW (default deny)
       community.general.ufw:
         state: enabled
@@ -126,13 +149,15 @@
         dest: /etc/apt/keyrings/docker.asc
         mode: "0644"
 
-    - name: Add Docker apt repository
-      ansible.builtin.apt_repository:
-        repo: >-
-          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc]
-          https://download.docker.com/linux/debian
-          {{ ansible_distribution_release }} stable
-        filename: docker
+    - name: Add Docker apt repository (DEB822 format)
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: deb
+        uris: https://download.docker.com/linux/debian
+        suites: "{{ ansible_distribution_release }}"
+        components: stable
+        architectures: amd64
+        signed_by: /etc/apt/keyrings/docker.asc
         state: present
 
     - name: Install Docker Engine and Compose plugin
@@ -402,6 +427,17 @@
           DB_HOST=db
           DB_PORT=5432
           DATABASE_URL=postgresql://{{ fresh_fridge_postgres_user }}:{{ fresh_fridge_postgres_password }}@db:5432/{{ fresh_fridge_postgres_db }}
+
+          # Database Backups configuration
+          SCHEDULE=@daily
+          BACKUP_KEEP_DAYS=7
+          S3_ACCESS_KEY_ID={{ fresh_fridge_s3_access_key_id }}
+          S3_SECRET_ACCESS_KEY={{ fresh_fridge_s3_secret_access_key }}
+          S3_BUCKET=backups-fxhibon
+          S3_REGION=rbx
+          S3_ENDPOINT=https://s3.rbx.io.cloud.ovh.net
+          S3_PREFIX=fresh-fridge
+          POSTGRES_DATABASE={{ fresh_fridge_postgres_db }}
         owner: debian
         group: debian
         mode: "0600"
@@ -477,6 +513,39 @@
       become: false
       tags: fxhibon-fr
 
+    # ── Satisfactory Dedicated Server Deployment ───────────────────────────────
+
+    - name: Ensure satisfactory directories exist
+      ansible.builtin.file:
+        path: "/home/debian/apps/satisfactory/{{ item }}"
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      loop:
+        - ""
+        - "data"
+      tags: satisfactory
+
+    - name: Copy satisfactory docker-compose
+      ansible.builtin.copy:
+        src: ../../deployments/vps/satisfactory/docker-compose.yml
+        dest: /home/debian/apps/satisfactory/docker-compose.yml
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: satisfactory
+
+    - name: Start satisfactory via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/satisfactory
+        state: "{{ satisfactory_state | default('present') }}"
+        pull: always
+        recreate: always
+        remove_orphans: true
+      become: false
+      tags: satisfactory
+
 
   handlers:
     - name: Restart sshd
@@ -508,6 +577,8 @@
           - ufw
           - jq
           - geoip-bin
+          - tree
+          - neovim
         state: present
 
     # ── SSH hardening ─────────────────────────────────────────────────────────
