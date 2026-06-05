@@ -372,9 +372,11 @@
         - { src: "config/grafana/provisioning/datasources/datasource.yml", dest: "config/grafana/provisioning/datasources/datasource.yml", mode: "0644" }
         - { src: "config/grafana/provisioning/dashboards/dashboard.yml", dest: "config/grafana/provisioning/dashboards/dashboard.yml", mode: "0644" }
         - { src: "dashboards/docker-containers.json", dest: "dashboards/docker-containers.json", mode: "0644" }
+        - { src: "dashboards/postgres.json", dest: "dashboards/postgres.json", mode: "0644" }
         - { src: "config/loki/loki.yml", dest: "config/loki/loki.yml", mode: "0644" }
         - { src: "config/alloy/config.alloy", dest: "config/alloy/config.alloy", mode: "0644" }
       tags: monitoring
+
 
     - name: Render Monitoring docker-compose template
       ansible.builtin.template:
