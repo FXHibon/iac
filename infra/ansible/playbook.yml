@@ -485,7 +485,38 @@
       become: false
       tags: running-pace-calculator
 
+    # ── Square-Collage-Maker Deployment ────────────────────────────────────────
+
+    - name: Ensure square-collage-maker directories exist
+      ansible.builtin.file:
+        path: /home/debian/apps/square-collage-maker
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      tags: square-collage-maker
+
+    - name: Copy square-collage-maker docker-compose
+      ansible.builtin.copy:
+        src: ../../deployments/vps/square-collage-maker/docker-compose.yml
+        dest: /home/debian/apps/square-collage-maker/docker-compose.yml
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: square-collage-maker
+
+    - name: Start square-collage-maker via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/square-collage-maker
+        state: present
+        pull: always
+        recreate: always
+        remove_orphans: true
+      become: false
+      tags: square-collage-maker
+
     # ── fxhibon.fr Deployment ──────────────────────────────────────────────────
+
 
     - name: Ensure fxhibon-fr directories exist
       ansible.builtin.file:

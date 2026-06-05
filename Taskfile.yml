@@ -65,6 +65,12 @@ tasks:
     cmds:
       - ./deploy.sh --tags running-pace-calculator
 
+  deploy-square-collage-maker:
+    desc: "Deploy / update the Square Collage Maker application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags square-collage-maker
+
   deploy-fxhibon-fr:
     desc: "Deploy / update the fxhibon.fr application"
     dir: "{{.ANSIBLE_DIR}}"

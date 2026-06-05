@@ -37,3 +37,5 @@ traefik/data/acme.json
 .ansible_fact_cache/
 infra/ansible/.ansible_fact_cache/
 
+# Task runner
+.task/

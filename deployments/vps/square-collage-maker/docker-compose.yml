@@ -1,0 +1,19 @@
+services:
+  app:
+    image: fxhibon/square-collage-maker:0.0.1
+    container_name: square-collage-maker
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.square-collage-maker.entrypoints=websecure"
+      - "traefik.http.routers.square-collage-maker.rule=Host(`square-collage-maker.fxhibon.fr`)"
+      - "traefik.http.routers.square-collage-maker.tls=true"
+      - "traefik.http.routers.square-collage-maker.tls.certresolver=myresolver"
+      - "traefik.http.services.square-collage-maker.loadbalancer.server.port=3000"
+      - "traefik.http.routers.square-collage-maker.middlewares=global-ratelimit,crowdsec-bouncer"
+
+networks:
+  proxy:
+    external: true
