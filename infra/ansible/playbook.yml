@@ -417,6 +417,37 @@
       become: false
       tags: fresh-fridge
 
+    # ── Running-Pace-Calculator Deployment ─────────────────────────────────────
+
+    - name: Ensure running-pace-calculator directories exist
+      ansible.builtin.file:
+        path: /home/debian/apps/running-pace-calculator
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      tags: running-pace-calculator
+
+    - name: Copy running-pace-calculator docker-compose
+      ansible.builtin.copy:
+        src: ../../deployments/vps/running-pace-calculator/docker-compose.yml
+        dest: /home/debian/apps/running-pace-calculator/docker-compose.yml
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: running-pace-calculator
+
+    - name: Start running-pace-calculator via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/running-pace-calculator
+        state: present
+        pull: always
+        recreate: always
+        remove_orphans: true
+      become: false
+      tags: running-pace-calculator
+
+
   handlers:
     - name: Restart sshd
       ansible.builtin.service:

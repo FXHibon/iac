@@ -1,0 +1,19 @@
+services:
+  app:
+    image: fxhibon/running-pace-calculator:latest
+    container_name: running-pace-calculator
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.running-pace-calculator.entrypoints=websecure"
+      - "traefik.http.routers.running-pace-calculator.rule=Host(`running-pace-calculator.fxhibon.fr`)"
+      - "traefik.http.routers.running-pace-calculator.tls=true"
+      - "traefik.http.routers.running-pace-calculator.tls.certresolver=myresolver"
+      - "traefik.http.services.running-pace-calculator.loadbalancer.server.port=80"
+      - "traefik.http.routers.running-pace-calculator.middlewares=global-ratelimit,crowdsec-bouncer"
+
+networks:
+  proxy:
+    external: true

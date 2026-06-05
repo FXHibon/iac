@@ -59,6 +59,12 @@ tasks:
     cmds:
       - ./deploy.sh --tags fresh-fridge
 
+  deploy-running-pace-calculator:
+    desc: "Deploy / update the Running Pace Calculator application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags running-pace-calculator
+
   # ─── OpenTofu Infrastructure ───────────────────────────────────────────────────
   tofu-init:
     desc: "Initialize OpenTofu working directory with S3 backend"
