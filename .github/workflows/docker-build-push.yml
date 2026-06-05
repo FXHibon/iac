@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout caller repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Extract the caller repository's name (e.g. from "fxhibon/my-app" to "my-app")
       - name: Extract repository name
@@ -29,15 +29,15 @@ jobs:
 
       # QEMU is required to build for non-x86 architectures like ARM64 on x86 runners
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       # Set up Docker Buildx (which handles multi-platform builds and caching)
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Log in to Docker Hub using the secrets passed by the caller workflow
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
@@ -45,7 +45,7 @@ jobs:
       # Extract metadata (tags, labels) for Docker images based on git events
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: fxhibon/${{ steps.repo-name.outputs.name }}
           # Generate tags based on git reference type:
@@ -62,7 +62,7 @@ jobs:
 
       # Build and push the image for both ARM64 and AMD64
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
