@@ -190,14 +190,14 @@ tasks:
     env: &renovate-env
       RENOVATE_HOST_RULES: '[{"hostType": "docker", "matchHost": "docker.io", "username": "{{.DOCKER_USERNAME}}", "password": "{{.DOCKER_PASSWORD}}"}]'
     cmds:
-      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES renovate/renovate --onboarding=false --dry-run=lookup
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES -e GITHUB_COM_TOKEN="${GITHUB_TOKEN}" renovate/renovate --onboarding=false --dry-run=lookup
 
   renovate-apply:
     desc: "Scan repository and write version updates directly to files"
     vars: *renovate-vars
     env: *renovate-env
     cmds:
-      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES renovate/renovate --onboarding=false
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES -e GITHUB_COM_TOKEN="${GITHUB_TOKEN}" renovate/renovate --onboarding=false
 
   # ─── Linting & Security ───────────────────────────────────────────────────────
   lint-iac:
