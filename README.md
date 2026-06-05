@@ -194,7 +194,7 @@ on:
 
 jobs:
   docker-build-push:
-    uses: fxhibon/vps-iac/.github/workflows/docker-build-push.yml@master
+    uses: fxhibon/iac/.github/workflows/docker-build-push.yml@master
     secrets:
       dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
