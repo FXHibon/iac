@@ -25,6 +25,7 @@ Infrastructure as Code (IaC) for a personal local homelab and public OVH VPS —
 | **[deployments/vps/monitoring/](deployments/vps/monitoring/)** | Docker Compose / Prometheus / Grafana / Loki / Alloy / docker-stats-exporter | Scrapes VPS metrics (via docker-stats-exporter), aggregates logs dynamically (via Alloy + Loki), and hosts the unified dashboards. |
 | **[deployments/vps/fresh-fridge/](deployments/vps/fresh-fridge/)** | Docker Compose / Node.js | Private web application deployed securely on the VPS. |
 | **[deployments/vps/running-pace-calculator/](deployments/vps/running-pace-calculator/)** | Docker Compose / React / Nginx | Public running pace calculator application deployed on the VPS. |
+| **[deployments/vps/fxhibon-fr/](deployments/vps/fxhibon-fr/)** | Docker Compose / Nginx | Public main personal site deployed on the VPS. |
 | **[deployments/rp5/](deployments/rp5/)** | Docker Compose | Deploys local home-monitoring (Grafana, Prometheus) and media services (Plex, Transmission). |
 
 ---
@@ -74,6 +75,9 @@ task deploy-fresh-fridge
 
 # Deploy/update Running Pace Calculator application
 task deploy-running-pace-calculator
+
+# Deploy/update the fxhibon.fr application
+task deploy-fxhibon-fr
 
 # Deploy/update the entire Raspberry Pi (rp5) home lab stack
 task deploy-rp5

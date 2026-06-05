@@ -65,6 +65,12 @@ tasks:
     cmds:
       - ./deploy.sh --tags running-pace-calculator
 
+  deploy-fxhibon-fr:
+    desc: "Deploy / update the fxhibon.fr application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags fxhibon-fr
+
   # ─── OpenTofu Infrastructure ───────────────────────────────────────────────────
   tofu-init:
     desc: "Initialize OpenTofu working directory with S3 backend"

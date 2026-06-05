@@ -65,6 +65,25 @@ resource "ovh_domain_zone_record" "grafana_vps_record_v4" {
 }
 
 
+# Apex/root domain records (fxhibon.fr)
+resource "ovh_domain_zone_record" "apex_vps_record_v4" {
+  zone      = ovh_domain_name.root_domain.domain_name
+  subdomain = null
+  fieldtype = "A"
+  ttl       = 3600
+  target    = tolist(data.ovh_vps.main_vps.ips)[1]
+}
+
+resource "ovh_domain_zone_record" "apex_vps_record_v6" {
+  zone      = ovh_domain_name.root_domain.domain_name
+  subdomain = null
+  fieldtype = "AAAA"
+  ttl       = 3600
+  target    = tolist(data.ovh_vps.main_vps.ips)[0]
+}
+
+
+
 # Wildcard for all other services on the VPS (e.g. *.vps.fxhibon.fr)
 resource "ovh_domain_zone_record" "wildcard_vps_record_v4" {
   zone      = ovh_domain_name.root_domain.domain_name

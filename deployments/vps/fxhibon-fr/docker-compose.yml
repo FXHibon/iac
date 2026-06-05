@@ -1,0 +1,19 @@
+services:
+  app:
+    image: fxhibon/fxhibon.fr:0.0.2
+    container_name: fxhibon-fr
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fxhibon-fr.entrypoints=websecure"
+      - "traefik.http.routers.fxhibon-fr.rule=Host(`fxhibon.fr`) || Host(`www.fxhibon.fr`)"
+      - "traefik.http.routers.fxhibon-fr.tls=true"
+      - "traefik.http.routers.fxhibon-fr.tls.certresolver=myresolver"
+      - "traefik.http.services.fxhibon-fr.loadbalancer.server.port=80"
+      - "traefik.http.routers.fxhibon-fr.middlewares=global-ratelimit,crowdsec-bouncer"
+
+networks:
+  proxy:
+    external: true

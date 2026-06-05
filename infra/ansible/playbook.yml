@@ -447,6 +447,36 @@
       become: false
       tags: running-pace-calculator
 
+    # ── fxhibon.fr Deployment ──────────────────────────────────────────────────
+
+    - name: Ensure fxhibon-fr directories exist
+      ansible.builtin.file:
+        path: /home/debian/apps/fxhibon-fr
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      tags: fxhibon-fr
+
+    - name: Copy fxhibon-fr docker-compose
+      ansible.builtin.copy:
+        src: ../../deployments/vps/fxhibon-fr/docker-compose.yml
+        dest: /home/debian/apps/fxhibon-fr/docker-compose.yml
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: fxhibon-fr
+
+    - name: Start fxhibon-fr via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/fxhibon-fr
+        state: present
+        pull: always
+        recreate: always
+        remove_orphans: true
+      become: false
+      tags: fxhibon-fr
+
 
   handlers:
     - name: Restart sshd
