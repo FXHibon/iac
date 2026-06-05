@@ -1,0 +1,18 @@
+services:
+  satisfactory:
+    image: wolveix/satisfactory-server:latest
+    container_name: satisfactory-server
+    restart: unless-stopped
+    ports:
+      - "7777:7777/udp"
+      - "7777:7777/tcp"
+      - "8888:8888/tcp"
+    volumes:
+      - /home/debian/apps/satisfactory/data:/config
+    environment:
+      - MAXPLAYERS=2
+      - AUTOPAUSE=true
+      - AUTOSAVEINTERVAL=300
+      - AUTOSAVENUM=5
+      - PGID=1000
+      - PUID=1000

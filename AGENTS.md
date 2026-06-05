@@ -29,7 +29,7 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 - **Traefik proxy network**: All VPS services connect to the external `proxy` network created by Ansible/sync script.
 - **Docker Compose structure**: Each service group has a separate compose file under `deployments/` (`vps/traefik/`, `rp5/`).
 - **Port mapping**: Services expose container ports internally; Traefik routes via Docker labels (e.g., `traefik.enable=true`).
-  - Homepage: 3001, Prometheus: 9090, Grafana: 3000, Transmission: 9091, Node Exporter: 9100, Running Pace Calculator: 80, fxhibon.fr: 80.
+  - Homepage: 3001, Prometheus: 9090, Grafana: 3000, Transmission: 9091, Node Exporter: 9100, Running Pace Calculator: 80, fxhibon.fr: 80. External/direct exposure: Satisfactory Dedicated Server: 7777 (UDP/TCP).
   - Internal Services (No Traefik Routing): `docker-stats-exporter` listens internally on `9487`, `loki` listens internally on `3100`, and `alloy` runs internally.
   - Traefik: exposes public `80` (HTTP) and `443` (HTTPS) ports. The admin panel (`api@internal`) is secured and never exposed on a host port.
 
@@ -60,6 +60,12 @@ task deploy-running-pace-calculator
 
 # Deploy/update the fxhibon.fr application
 task deploy-fxhibon-fr
+
+# Deploy/update the Satisfactory Dedicated Server application
+task deploy-satisfactory
+
+# Stop the Satisfactory Dedicated Server application
+task stop-satisfactory
 
 # Deploy/update the entire Raspberry Pi (rp5) home lab stack
 task deploy-rp5

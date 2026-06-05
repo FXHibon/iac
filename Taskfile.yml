@@ -71,6 +71,19 @@ tasks:
     cmds:
       - ./deploy.sh --tags fxhibon-fr
 
+  deploy-satisfactory:
+    desc: "Deploy / update the Satisfactory Dedicated Server application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags satisfactory
+
+  stop-satisfactory:
+    desc: "Stop the Satisfactory Dedicated Server application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags satisfactory -e satisfactory_state=absent
+
+
   # ─── OpenTofu Infrastructure ───────────────────────────────────────────────────
   tofu-init:
     desc: "Initialize OpenTofu working directory with S3 backend"
