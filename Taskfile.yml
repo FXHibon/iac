@@ -168,5 +168,11 @@ tasks:
     cmds:
       - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES renovate/renovate --onboarding=false
 
+  # ─── Linting & Security ───────────────────────────────────────────────────────
+  lint-iac:
+    desc: "Scan IaC configurations (OpenTofu, Ansible, Compose) for security issues using Checkov"
+    cmds:
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/tf" bridgecrew/checkov -d /tf --framework terraform,ansible,yaml
+
 
 
