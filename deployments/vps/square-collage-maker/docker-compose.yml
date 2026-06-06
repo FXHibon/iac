@@ -1,6 +1,6 @@
 services:
   app:
-    image: fxhibon/square-collage-maker:0.0.1
+    image: fxhibon/square-collage-maker:0.1.0
     container_name: square-collage-maker
     restart: unless-stopped
     networks:

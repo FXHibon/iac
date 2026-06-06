@@ -1,6 +1,6 @@
 services:
   app:
-    image: fxhibon/running-pace-calculator:latest
+    image: fxhibon/running-pace-calculator:0.2.0
     container_name: running-pace-calculator
     restart: unless-stopped
     networks:
