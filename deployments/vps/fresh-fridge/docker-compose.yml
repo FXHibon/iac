@@ -1,6 +1,6 @@
 services:
   app:
-    image: fxhibon/fresh-fridge:0.0.8
+    image: fxhibon/fresh-fridge:0.0.10
     container_name: fresh-fridge
     restart: unless-stopped
     env_file:
