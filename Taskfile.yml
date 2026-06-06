@@ -187,17 +187,19 @@ tasks:
         sh: sops -d --extract '["docker_username"]' {{.TASKFILE_DIR}}/infra/ansible/secrets.enc.yaml
       DOCKER_PASSWORD:
         sh: sops -d --extract '["docker_password"]' {{.TASKFILE_DIR}}/infra/ansible/secrets.enc.yaml
+      LOG_LEVEL: '{{.LOG_LEVEL | default "info"}}'
     env: &renovate-env
       RENOVATE_HOST_RULES: '[{"hostType": "docker", "matchHost": "docker.io", "username": "{{.DOCKER_USERNAME}}", "password": "{{.DOCKER_PASSWORD}}"}]'
+      LOG_LEVEL: '{{.LOG_LEVEL}}'
     cmds:
-      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES -e GITHUB_COM_TOKEN="${GITHUB_TOKEN}" renovate/renovate --onboarding=false --dry-run=lookup
+      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e LOG_LEVEL -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES -e GITHUB_COM_TOKEN="${GITHUB_TOKEN}" renovate/renovate --onboarding=false --dry-run=lookup
 
   renovate-apply:
-    desc: "Scan repository and write version updates directly to files"
+    desc: "Scan repository and create Pull Requests on GitHub for version updates"
     vars: *renovate-vars
     env: *renovate-env
     cmds:
-      - docker run --rm -v "{{.TASKFILE_DIR}}:/usr/src/app" -e RENOVATE_PLATFORM=local -e RENOVATE_HOST_RULES -e GITHUB_COM_TOKEN="${GITHUB_TOKEN}" renovate/renovate --onboarding=false
+      - docker run --rm -e LOG_LEVEL -e RENOVATE_PLATFORM=github -e RENOVATE_TOKEN="${GITHUB_TOKEN}" -e RENOVATE_HOST_RULES -e GITHUB_COM_TOKEN="${GITHUB_TOKEN}" renovate/renovate --onboarding=false FXHibon/iac
 
   # ─── Linting & Security ───────────────────────────────────────────────────────
   lint-iac:
