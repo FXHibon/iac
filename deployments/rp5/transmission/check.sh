@@ -7,11 +7,11 @@ f_container_name()
 
 f_find_all()
 {
-    curl --silent ipinfo.io/$ext_ip | jq
+    curl --silent ipinfo.io/"$ext_ip" | jq
 }
 
 var_cont_name=$(f_container_name)
-ext_ip=$(docker exec $var_cont_name curl --silent "http://ipinfo.io/ip")
+ext_ip=$(docker exec "$var_cont_name" curl --silent "http://ipinfo.io/ip")
 echo "Transmission VPN currently connected to IP address: $ext_ip"
 echo "This IP address is in the following country: "
 f_find_all

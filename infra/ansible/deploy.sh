@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 set -e
 
 echo "Decrypting secrets into memory and running Ansible playbook..."
