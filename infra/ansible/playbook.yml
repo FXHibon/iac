@@ -4,7 +4,7 @@
   become: true
 
   tasks:
-    - name: Resolve current home IP address dynamically
+    - name: Resolve current home IP address dynamically  # noqa: run-once[task]
       ansible.builtin.command: dig +short home.fxhibon.fr
       delegate_to: localhost
       run_once: true
@@ -290,7 +290,7 @@
       when: not traefik_env_file.stat.exists
       tags: traefik
 
-    - name: Dynamic CrowdSec Bouncer Key Generation and Registration
+    - name: Dynamic CrowdSec Bouncer Key Generation and Registration  # noqa: risky-shell-pipe
       ansible.builtin.shell: |
         set -e
         # 1. Check if we already have a real key (not placeholder)

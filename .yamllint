@@ -1,9 +1,20 @@
 ---
 extends: default
 
+ignore: |
+  infra/tofu/secrets.yaml
+  infra/ansible/secrets.enc.yaml
+
 rules:
   line-length: disable
   truthy: disable
-  comments: disable
   document-start: disable
-  braces: disable
+  comments-indentation: disable
+  comments:
+    min-spaces-from-content: 1
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
