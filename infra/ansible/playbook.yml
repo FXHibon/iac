@@ -546,6 +546,49 @@
       become: false
       tags: fxhibon-fr
 
+    # ── Stanne Deployment ──────────────────────────────────────────────────────
+
+    - name: Ensure stanne directories exist
+      ansible.builtin.file:
+        path: /home/debian/apps/stanne
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      tags: stanne
+
+    - name: Copy stanne docker-compose
+      ansible.builtin.copy:
+        src: ../../deployments/vps/stanne/docker-compose.yml
+        dest: /home/debian/apps/stanne/docker-compose.yml
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: stanne
+
+    - name: Create stanne .env file
+      ansible.builtin.copy:
+        dest: /home/debian/apps/stanne/.env
+        content: |
+          STANNE_MYSQL_USER={{ stanne_mysql_user }}
+          STANNE_MYSQL_PASSWORD={{ stanne_mysql_password }}
+          STANNE_MYSQL_DATABASE={{ stanne_mysql_database }}
+          STANNE_MYSQL_ROOT_PASSWORD={{ stanne_mysql_root_password }}
+        owner: debian
+        group: debian
+        mode: "0600"
+      tags: stanne
+
+    - name: Start stanne via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/stanne
+        state: present
+        pull: always
+        recreate: auto
+        remove_orphans: true
+      become: false
+      tags: stanne
+
     # ── Satisfactory Dedicated Server Deployment ───────────────────────────────
 
     - name: Ensure satisfactory directories exist

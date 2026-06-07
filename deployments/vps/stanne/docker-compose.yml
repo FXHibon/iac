@@ -1,0 +1,52 @@
+services:
+  app:
+    image: joomla:6.1.1-php8.4-apache
+    container_name: stanne
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      JOOMLA_DB_HOST: stanne-db
+      JOOMLA_DB_USER: ${STANNE_MYSQL_USER}
+      JOOMLA_DB_PASSWORD: ${STANNE_MYSQL_PASSWORD}
+      JOOMLA_DB_NAME: ${STANNE_MYSQL_DATABASE}
+    networks:
+      - proxy
+    depends_on:
+      db:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.stanne.entrypoints=websecure"
+      - "traefik.http.routers.stanne.rule=Host(`stanne.fxhibon.fr`)"
+      - "traefik.http.routers.stanne.tls=true"
+      - "traefik.http.routers.stanne.tls.certresolver=myresolver"
+      - "traefik.http.services.stanne.loadbalancer.server.port=80"
+      - "traefik.http.routers.stanne.middlewares=global-ratelimit,crowdsec-bouncer"
+    volumes:
+      - ./joomla-data:/var/www/html
+
+  db:
+    image: mysql:9.7.0
+    container_name: stanne-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${STANNE_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${STANNE_MYSQL_DATABASE}
+      MYSQL_USER: ${STANNE_MYSQL_USER}
+      MYSQL_PASSWORD: ${STANNE_MYSQL_PASSWORD}
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  proxy:
+    external: true

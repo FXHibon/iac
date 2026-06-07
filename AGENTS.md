@@ -61,6 +61,9 @@ task deploy-running-pace-calculator
 # Deploy/update the fxhibon.fr application
 task deploy-fxhibon-fr
 
+# Deploy/update the Stanne (Joomla + MySQL) application
+task deploy-stanne
+
 # Deploy/update the Satisfactory Dedicated Server application
 task deploy-satisfactory
 

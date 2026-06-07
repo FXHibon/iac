@@ -77,6 +77,12 @@ tasks:
     cmds:
       - ./deploy.sh --tags fxhibon-fr
 
+  deploy-stanne:
+    desc: "Deploy / update the Stanne application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags stanne
+
   deploy-satisfactory:
     desc: "Deploy / update the Satisfactory Dedicated Server application"
     dir: "{{.ANSIBLE_DIR}}"
