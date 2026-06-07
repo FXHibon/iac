@@ -47,6 +47,20 @@ services:
       timeout: 5s
       retries: 5
 
+  backup:
+    image: jkaninda/mysql-bkup:v1.3.2
+    container_name: stanne-backup
+    restart: unless-stopped
+    command: backup --storage s3 --path /stanne
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - proxy
+    env_file:
+      - .env
+
 networks:
   proxy:
     external: true
+
