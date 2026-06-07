@@ -21,7 +21,7 @@ jobs:
 
       - name: Run Actionlint
         run: |
-          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/action-actionlint/main/scripts/download-actionlint.bash)
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
           ./actionlint -color
 
       - name: Install & Run ShellCheck
@@ -119,10 +119,10 @@ jobs:
           curl -Lo sops https://github.com/getsops/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64 && chmod +x sops && sudo mv sops /usr/local/bin/
 
           echo "Decrypting secrets to extract S3 backend credentials..."
-          sops -d infra/tofu/secrets.yaml > secrets.dec.yaml
-          AWS_ACCESS_KEY_ID=$(jq -r '.backend.s3_access_key_id' secrets.dec.yaml)
-          AWS_SECRET_ACCESS_KEY=$(jq -r '.backend.s3_secret_access_key' secrets.dec.yaml)
-          rm secrets.dec.yaml
+          sops -d --output-type json infra/tofu/secrets.yaml > secrets.dec.json
+          AWS_ACCESS_KEY_ID=$(jq -r '.backend.s3_access_key_id' secrets.dec.json)
+          AWS_SECRET_ACCESS_KEY=$(jq -r '.backend.s3_secret_access_key' secrets.dec.json)
+          rm secrets.dec.json
 
           export AWS_ACCESS_KEY_ID
           export AWS_SECRET_ACCESS_KEY
