@@ -40,5 +40,3 @@ compactor:
 
 pattern_ingester:
   enabled: true
-
-
