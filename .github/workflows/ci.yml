@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   lint-code:
@@ -92,6 +93,11 @@ jobs:
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
 
+      - name: Setup tfcmt
+        uses: shirakiya/setup-tfcmt@v3
+        with:
+          version: v4.13.0
+
       - name: OpenTofu Format Check
         run: tofu fmt -check -recursive infra/tofu
 
@@ -109,6 +115,7 @@ jobs:
       - name: OpenTofu Plan
         env:
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -z "$SOPS_AGE_KEY" ]; then
             echo "::warning::SOPS_AGE_KEY secret is not set, skipping OpenTofu plan against live infrastructure."
@@ -131,12 +138,12 @@ jobs:
           echo "Running tofu plan for bucket/hulking-weinberg..."
           cd infra/tofu/bucket/hulking-weinberg
           tofu init
-          tofu plan -no-color
+          tfcmt -var "target:bucket/hulking-weinberg" plan -- tofu plan -no-color
 
           echo "Running tofu plan for vps/ovh..."
           cd ../../vps/ovh
           tofu init
-          tofu plan -no-color
+          tfcmt -var "target:vps/ovh" plan -- tofu plan -no-color
 
   security-scan:
     name: IaC Security Scan (Checkov)
