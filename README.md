@@ -104,113 +104,6 @@ task vps-logs container=alloy
 
 ---
 
-## General Diagnostics & Security Commands
-
-```shell
-# Check security statuses
-systemctl status fail2ban
-systemctl status ufw
-
-# List Fail2Ban jails & status
-fail2ban-client status
-fail2ban-client status sshd
-
-# List geolocation of banned SSH IPs
-fail2ban-client banned | \
-tr "'" '"' | \
-jq -r '.[0].sshd.[]' | \
-while read line
-do
-  geoiplookup $line | sed -r 's/GeoIP Country Edition: //g'
-done | \
-sort | uniq -c | sort --numeric --reverse
-
-# Check firewall rules
-ufw status verbose
-
-# Test local Alertmanager manual triggers
-curl -v -H "Content-Type: application/json" -d '[
-  {
-    "labels": {
-      "alertname": "TestAlert",
-      "severity": "critical",
-      "instance": "localhost"
-    },
-    "annotations": {
-      "summary": "Manual test alert",
-      "description": "If you are seeing this, Alertmanager notifications are working!"
-    }
-  }
-]' http://localhost:9093/api/v2/alerts
-```
-
----
-
-## Database Backup & Restore
-
-The PostgreSQL database for the `fresh-fridge` service (`postgres:18-alpine`) is automatically backed up daily to an OVH S3-compatible object storage bucket (`backups-fxhibon`) using the `ghcr.io/solectrus/postgres-s3-backup:18` sidecar container.
-
-### ⚠️ Warning: Data Loss
-Restoring a database backup is **destructive**. All existing tables, data, and database objects in the target database will be dropped and re-created using the backup.
-
-### Restoration Procedure
-
-All commands should be executed on the VPS host.
-
-#### Step 1: SSH into the VPS
-```bash
-ssh vps
-```
-
-#### Step 2: Navigate to the Application Directory
-```bash
-cd /home/debian/apps/fresh-fridge
-```
-
-#### Step 3: Stop the Application Container
-To prevent any reads or writes during the restore process and avoid application state issues, stop the `fresh-fridge` app container. The database and backup containers must remain running:
-```bash
-docker stop fresh-fridge
-```
-
-#### Step 4: Choose a Backup and Restore
-
-##### Option A: Restore the Latest Backup
-To restore the most recent backup found in the S3 bucket:
-```bash
-docker exec -it fresh-fridge-backup sh restore.sh
-```
-
-##### Option B: Restore a Specific Backup
-1. **List available backups** inside the S3 bucket to find the desired timestamp:
-   ```bash
-   docker exec -it fresh-fridge-backup sh -c 'aws --endpoint-url $S3_ENDPOINT s3 ls s3://$S3_BUCKET/$S3_PREFIX/'
-   ```
-   *The backup files are named in the format: `<database_name>_<timestamp>.dump` (e.g., `fresh_fridge_db_2026-06-06T12:00:00.dump`).*
-
-2. **Run the restore command** with the target timestamp as the parameter:
-   ```bash
-   docker exec -it fresh-fridge-backup sh restore.sh <timestamp>
-   ```
-   *For example:*
-   ```bash
-   docker exec -it fresh-fridge-backup sh restore.sh 2026-06-06T12:00:00
-   ```
-
-#### Step 5: Restart the Application Container
-Once the restore completes successfully, start the application container again:
-```bash
-docker start fresh-fridge
-```
-
-### Manual/Ad-Hoc Backup Trigger
-If you want to trigger a manual backup immediately (e.g., before performing system upgrades or code changes):
-```bash
-docker exec -it fresh-fridge-backup sh backup.sh
-```
-
----
-
 ## Dependency Management (Renovate)
 
 This project uses [Renovate](https://docs.renovatebot.com/) to automatically check and update external components (Docker Compose image tags and OpenTofu provider versions). 
@@ -239,37 +132,12 @@ For complete hands-free automation, you can enable Renovate on your git hosting 
 
 ---
 
-## Reusable GitHub Action (Docker Build & Push)
+## Advanced Guides & Operations
 
-This repository implements a reusable GitHub Actions workflow to build and push multi-platform (`amd64`/`arm64`) Docker images for your other projects.
+For specialized procedures, diagnostics, and configurations, refer to the following sub-documents:
 
-### How to Use
-
-Create a workflow file in your other repository (e.g., `.github/workflows/ci.yml`):
-
-```yaml
-name: Build and Push Service
-
-on:
-  push:
-    branches:
-      - master
-    tags:
-      - 'v*' # Trigger on SemVer version tags
-
-jobs:
-  docker-build-push:
-    uses: fxhibon/iac/.github/workflows/docker-build-push.yml@master
-    secrets:
-      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-```
-
-### Secrets Setup
-Make sure you store the following secrets under **Settings** -> **Secrets and variables** -> **Actions** in the calling repository:
-- `DOCKERHUB_USERNAME`: Set to `fxhibon`.
-- `DOCKERHUB_TOKEN`: Your Docker Hub Personal Access Token.
-
-The workflow automatically names the image based on the caller repository's name and handles SemVer, branch, and commit-level tagging automatically. For detailed configuration, refer to [.github/workflows/docker-build-push.yml](.github/workflows/docker-build-push.yml).
+- 🗄️ **[Database Backup & Restore (Fresh-Fridge)](deployments/vps/fresh-fridge/README.md)**: Steps for managing PostgreSQL backups and performing recovery on the VPS.
+- 🛡️ **[Diagnostics & System Security](infra/ansible/README.md#diagnostics--security-runbook)**: Verification commands for Fail2Ban, UFW firewall, SSH IP geolocation scripts, and testing Alertmanager alerts.
+- 🤖 **[Reusable GitHub Actions](.github/workflows/README.md)**: Guidelines on utilizing the shared Docker Build & Push workflow within external repositories.
 
 

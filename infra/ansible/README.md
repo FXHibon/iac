@@ -84,3 +84,54 @@ ansible all -i inventory.ini -m ansible.builtin.apt -a "update_cache=yes upgrade
 # Fail2Ban active
 ssh debian@vps.fxhibon.fr "sudo fail2ban-client status sshd"
 ```
+
+---
+
+## Diagnostics & Security Runbook
+
+These commands are useful for troubleshooting and monitoring host security.
+
+### Service & Firewall Status
+```shell
+# Check security statuses
+systemctl status fail2ban
+systemctl status ufw
+
+# List Fail2Ban jails & status
+fail2ban-client status
+fail2ban-client status sshd
+
+# Check firewall rules
+ufw status verbose
+```
+
+### Live Geolocation of Banned SSH IPs
+Run this to parse banned IPs and look up their countries (requires `geoip-bin` and `jq` on the host):
+```shell
+fail2ban-client banned | \
+tr "'" '"' | \
+jq -r '.[0].sshd.[]' | \
+while read line
+do
+  geoiplookup $line | sed -r 's/GeoIP Country Edition: //g'
+done | \
+sort | uniq -c | sort --numeric --reverse
+```
+
+### Alertmanager Manual Trigger Test
+To test local Alertmanager notifications manually:
+```shell
+curl -v -H "Content-Type: application/json" -d '[
+  {
+    "labels": {
+      "alertname": "TestAlert",
+      "severity": "critical",
+      "instance": "localhost"
+    },
+    "annotations": {
+      "summary": "Manual test alert",
+      "description": "If you are seeing this, Alertmanager notifications are working!"
+    }
+  }
+]' http://localhost:9093/api/v2/alerts
+```
