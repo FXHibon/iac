@@ -206,6 +206,3 @@ tasks:
     desc: "Scan IaC configurations (OpenTofu, Ansible, Compose) for security issues using Checkov"
     cmds:
       - docker run --rm -v "{{.TASKFILE_DIR}}:/tf" bridgecrew/checkov -d /tf --framework terraform,ansible,yaml
-
-
-

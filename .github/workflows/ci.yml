@@ -1,0 +1,150 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  lint-code:
+    name: Lint Code & Shell Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Actionlint
+        uses: rhysd/action-actionlint@v1
+        with:
+          actionlint-version: latest
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@v2.0.0
+        with:
+          scandir: .
+        env:
+          SHELLCHECK_OPTS: -e SC2086 -e SC2155
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Yamllint
+        run: pip install yamllint
+
+      - name: Run Yamllint
+        run: yamllint .
+
+  docker-compose-validate:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Files
+        run: |
+          find deployments -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name "compose.yml" -o -name "compose.yaml" | while read -r compose_file; do
+            echo "Validating $compose_file..."
+            docker compose -f "$compose_file" config > /dev/null
+          done
+
+  ansible-lint:
+    name: Lint Ansible Playbooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Ansible & Ansible-Lint
+        run: |
+          pip install ansible-lint ansible
+
+      - name: Install Ansible Galaxy Collections
+        run: |
+          ansible-galaxy collection install -r infra/ansible/requirements.yml
+
+      - name: Run Ansible Lint
+        run: |
+          ansible-lint infra/ansible/playbook.yml
+
+  opentofu:
+    name: OpenTofu Format, Lint & Plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+
+      - name: OpenTofu Format Check
+        run: tofu fmt -check -recursive infra/tofu
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Init TFLint
+        run: tflint --init
+
+      - name: Run TFLint
+        run: tflint --recursive
+
+      - name: OpenTofu Plan
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          if [ -z "$SOPS_AGE_KEY" ]; then
+            echo "::warning::SOPS_AGE_KEY secret is not set, skipping OpenTofu plan against live infrastructure."
+            exit 0
+          fi
+
+          echo "Installing SOPS..."
+          curl -Lo sops https://github.com/getsops/sops/releases/download/v3.9.0/sops-v3.9.0.linux.amd64 && chmod +x sops && sudo mv sops /usr/local/bin/
+
+          echo "Decrypting secrets to extract S3 backend credentials..."
+          sops -d infra/tofu/secrets.yaml > secrets.dec.yaml
+          AWS_ACCESS_KEY_ID=$(jq -r '.backend.s3_access_key_id' secrets.dec.yaml)
+          AWS_SECRET_ACCESS_KEY=$(jq -r '.backend.s3_secret_access_key' secrets.dec.yaml)
+          rm secrets.dec.yaml
+
+          export AWS_ACCESS_KEY_ID
+          export AWS_SECRET_ACCESS_KEY
+          export SOPS_AGE_KEY
+
+          echo "Running tofu plan for bucket/hulking-weinberg..."
+          cd infra/tofu/bucket/hulking-weinberg
+          tofu init
+          tofu plan -no-color
+
+          echo "Running tofu plan for vps/ovh..."
+          cd ../../vps/ovh
+          tofu init
+          tofu plan -no-color
+
+  security-scan:
+    name: IaC Security Scan (Checkov)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          framework: terraform,ansible,yaml
+          soft_fail: true

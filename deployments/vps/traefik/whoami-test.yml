@@ -10,13 +10,13 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      
+
       # Expose service on HTTPS under your subdomain
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.rule=Host(`whoami.vps.fxhibon.fr`)"
       - "traefik.http.routers.whoami.tls=true"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-      
+
       # Define the target container port (whoami listens on 80 by default)
       - "traefik.http.services.whoami.loadbalancer.server.port=80"
 
