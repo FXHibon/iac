@@ -32,6 +32,8 @@ traefik/data/acme.json
 .env
 *.decrypted.env
 *.decrypted
+secrets.decrypted.yaml
+infra/ansible/secrets.decrypted.yaml
 
 # Local Ansible cache
 .ansible_fact_cache/
@@ -39,3 +41,8 @@ infra/ansible/.ansible_fact_cache/
 
 # Task runner
 .task/
+
+# Joomla migration / backup files
+reboot.php
+*.jpa
+
