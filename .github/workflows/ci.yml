@@ -21,7 +21,7 @@ jobs:
 
       - name: Run Actionlint
         run: |
-          bash <(curl -SFsSL https://raw.githubusercontent.com/rhysd/action-actionlint/main/scripts/download-actionlint.bash)
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/action-actionlint/main/scripts/download-actionlint.bash)
           ./actionlint -color
 
       - name: Install & Run ShellCheck
