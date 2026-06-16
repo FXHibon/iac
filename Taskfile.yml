@@ -101,6 +101,23 @@ tasks:
     cmds:
       - ./deploy.sh --tags satisfactory -e satisfactory_state=absent
 
+  deploy-changed:
+    desc: "Automatically detect and redeploy only the applications that changed since the last deployment"
+    cmds:
+      - bash ./scripts/deploy-changed.sh {{.CLI_ARGS}}
+
+  deploy-changed-dry:
+    desc: "Show what applications would be redeployed by the auto-deployment script (dry-run)"
+    cmds:
+      - bash ./scripts/deploy-changed.sh --dry-run {{.CLI_ARGS}}
+
+  deploy-init-tag:
+    desc: "Initialize or reset the 'deployed' git tag at the current commit"
+    cmds:
+      - git tag -f deployed HEAD
+      - echo "Git tag 'deployed' initialized at $(git rev-parse --short HEAD)"
+
+
 
   # ─── OpenTofu Infrastructure ───────────────────────────────────────────────────
   tofu-init:

@@ -88,6 +88,15 @@ task stop-satisfactory
 
 # Deploy/update the entire Raspberry Pi (rp5) home lab stack
 task deploy-rp5
+
+# Automatically detect and deploy only updated applications/stacks
+task deploy-changed
+
+# Dry-run what applications would be redeployed by the change detection script
+task deploy-changed-dry
+
+# Initialize or reset the 'deployed' git tag at the current commit
+task deploy-init-tag
 ```
 
 ### 4. System Upgrades & Diagnostics
