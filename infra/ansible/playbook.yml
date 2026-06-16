@@ -639,6 +639,65 @@
       become: false
       tags: satisfactory
 
+    # ── Poc-Cms Deployment ─────────────────────────────────────────────────────
+
+    - name: Ensure poc-cms directories exist
+      ansible.builtin.file:
+        path: /home/debian/apps/poc-cms
+        state: directory
+        owner: debian
+        group: debian
+        mode: "0755"
+      tags: poc-cms
+
+    - name: Copy poc-cms docker-compose
+      ansible.builtin.copy:
+        src: ../../deployments/vps/poc-cms/docker-compose.yml
+        dest: /home/debian/apps/poc-cms/docker-compose.yml
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: poc-cms
+
+    - name: Create poc-cms .env file
+      ansible.builtin.copy:
+        dest: /home/debian/apps/poc-cms/.env
+        content: |
+          POSTGRES_USER={{ poc_cms_postgres_user }}
+          POSTGRES_PASSWORD={{ poc_cms_postgres_password }}
+          POSTGRES_DB={{ poc_cms_postgres_db }}
+          POSTGRES_HOST=db
+          POSTGRES_PORT=5432
+          DB_HOST=db
+          DB_PORT=5432
+          DATABASE_URL=postgresql://{{ poc_cms_postgres_user }}:{{ poc_cms_postgres_password }}@db:5432/{{ poc_cms_postgres_db }}
+          ADMIN_PASSWORD={{ poc_cms_admin_password }}
+
+          # Database Backups configuration
+          SCHEDULE=@daily
+          BACKUP_KEEP_DAYS=7
+          S3_ACCESS_KEY_ID={{ poc_cms_s3_access_key_id }}
+          S3_SECRET_ACCESS_KEY={{ poc_cms_s3_secret_access_key }}
+          S3_BUCKET=backups-fxhibon
+          S3_REGION=rbx
+          S3_ENDPOINT=https://s3.rbx.io.cloud.ovh.net
+          S3_PREFIX=poc-cms
+          POSTGRES_DATABASE={{ poc_cms_postgres_db }}
+        owner: debian
+        group: debian
+        mode: "0600"
+      tags: poc-cms
+
+    - name: Start poc-cms via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /home/debian/apps/poc-cms
+        state: present
+        pull: always
+        recreate: auto
+        remove_orphans: true
+      become: false
+      tags: poc-cms
+
 
   handlers:
     - name: Restart sshd

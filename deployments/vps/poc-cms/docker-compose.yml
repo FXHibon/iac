@@ -1,0 +1,69 @@
+services:
+  app:
+    image: fxhibon/poc-cms:0.1.0
+    container_name: poc-cms
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - default
+      - proxy
+    depends_on:
+      db:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.poc-cms.entrypoints=websecure"
+      - "traefik.http.routers.poc-cms.rule=Host(`poc-cms.fxhibon.fr`)"
+      - "traefik.http.routers.poc-cms.tls=true"
+      - "traefik.http.routers.poc-cms.tls.certresolver=myresolver"
+      - "traefik.http.services.poc-cms.loadbalancer.server.port=3000"
+      - "traefik.http.routers.poc-cms.middlewares=global-ratelimit,crowdsec-bouncer"
+
+  db:
+    image: postgres:18-alpine
+    container_name: poc-cms-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/18/docker
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backup:
+    image: ghcr.io/solectrus/postgres-s3-backup:18
+    container_name: poc-cms-backup
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+    env_file:
+      - .env
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.19.1
+    container_name: poc-cms-postgres-exporter
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+      - proxy
+    env_file:
+      - .env
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+
+networks:
+  proxy:
+    external: true
+  default:

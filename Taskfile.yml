@@ -59,6 +59,12 @@ tasks:
     cmds:
       - ./deploy.sh --tags fresh-fridge
 
+  deploy-poc-cms:
+    desc: "Deploy / update the Poc-Cms application"
+    dir: "{{.ANSIBLE_DIR}}"
+    cmds:
+      - ./deploy.sh --tags poc-cms
+
   deploy-running-pace-calculator:
     desc: "Deploy / update the Running Pace Calculator application"
     dir: "{{.ANSIBLE_DIR}}"
