@@ -117,8 +117,6 @@ tasks:
       - git tag -f deployed HEAD
       - echo "Git tag 'deployed' initialized at $(git rev-parse --short HEAD)"
 
-
-
   # ─── OpenTofu Infrastructure ───────────────────────────────────────────────────
   tofu-init:
     desc: "Initialize OpenTofu working directory with S3 backend"

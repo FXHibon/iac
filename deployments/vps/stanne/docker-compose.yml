@@ -25,6 +25,7 @@ services:
       - "traefik.http.routers.stanne.middlewares=global-ratelimit,crowdsec-bouncer"
     volumes:
       - ./joomla-data:/var/www/html
+      - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 
   db:
     image: mysql:9.7.0

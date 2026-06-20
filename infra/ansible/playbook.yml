@@ -566,6 +566,15 @@
         mode: "0644"
       tags: stanne
 
+    - name: Copy stanne custom php.ini configuration
+      ansible.builtin.copy:
+        src: ../../deployments/vps/stanne/uploads.ini
+        dest: /home/debian/apps/stanne/uploads.ini
+        owner: debian
+        group: debian
+        mode: "0644"
+      tags: stanne
+
     - name: Create stanne .env file
       ansible.builtin.copy:
         dest: /home/debian/apps/stanne/.env
