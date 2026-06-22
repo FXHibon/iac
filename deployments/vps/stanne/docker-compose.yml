@@ -28,7 +28,7 @@ services:
       - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 
   db:
-    image: mysql:9.7.0
+    image: mysql:9.7.1
     container_name: stanne-db
     restart: unless-stopped
     env_file:
