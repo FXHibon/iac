@@ -1,6 +1,6 @@
 services:
   app:
-    image: fxhibon/fresh-fridge:0.0.10
+    image: fxhibon/fresh-fridge:0.2.0
     container_name: fresh-fridge
     restart: unless-stopped
     env_file:
@@ -48,7 +48,7 @@ services:
       - .env
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.19.1
+    image: prometheuscommunity/postgres-exporter:v0.20.0
     container_name: fresh-fridge-postgres-exporter
     restart: unless-stopped
     depends_on:

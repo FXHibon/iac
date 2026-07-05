@@ -40,7 +40,7 @@ services:
 
   ###### - Monitoring
   alertmanager:
-    image: prom/alertmanager:v0.33.0
+    image: prom/alertmanager:v0.33.1
     container_name: alertmanager
     restart: unless-stopped
     volumes:
@@ -52,7 +52,7 @@ services:
       - "9093:9093"
 
   prometheus:
-    image: prom/prometheus:v3.12.0
+    image: prom/prometheus:v3.13.0
     container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -80,7 +80,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:13.0.2
+    image: grafana/grafana:13.1.0
     container_name: grafana
     ports:
       - "3000:3000"
