@@ -1,6 +1,6 @@
 services:
   app:
-    image: fxhibon/poc-cms:0.1.0
+    image: fxhibon/poc-cms:0.3.0
     container_name: poc-cms
     restart: unless-stopped
     env_file:
@@ -49,7 +49,7 @@ services:
       - .env
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.19.1
+    image: prometheuscommunity/postgres-exporter:v0.20.0
     container_name: poc-cms-postgres-exporter
     restart: unless-stopped
     depends_on:

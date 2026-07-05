@@ -1,6 +1,6 @@
 services:
   app:
-    image: fxhibon/fxhibon.fr:0.1.0
+    image: fxhibon/fxhibon.fr:0.3.0
     container_name: fxhibon-fr
     restart: unless-stopped
     networks:
