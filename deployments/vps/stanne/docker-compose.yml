@@ -18,7 +18,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.stanne.entrypoints=websecure"
-      - "traefik.http.routers.stanne.rule=Host(`stanne.fxhibon.fr`)"
+      - "traefik.http.routers.stanne.rule=Host(`stanne.fxhibon.fr`) || Host(`ensemble-valgo.fr`)"
       - "traefik.http.routers.stanne.tls=true"
       - "traefik.http.routers.stanne.tls.certresolver=myresolver"
       - "traefik.http.services.stanne.loadbalancer.server.port=80"
