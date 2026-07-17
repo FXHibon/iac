@@ -33,7 +33,7 @@ services:
       - OPENVPN_CONFIG=uk.protonvpn.udp,fr.protonvpn.udp,es.protonvpn.udp
       - OPENVPN_USERNAME=${TRANSMISSION_VPN_USERNAME}
       - OPENVPN_PASSWORD=${TRANSMISSION_VPN_PASSWORD}
-      - LOCAL_NETWORK=192.168.1.0/24
+      - LOCAL_NETWORK=192.168.1.0/24,10.125.50.0/24
       - TZ=Europe/Paris
     ports:
       - "9091:9091"
