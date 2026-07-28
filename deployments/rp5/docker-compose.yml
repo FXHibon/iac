@@ -52,7 +52,7 @@ services:
       - "9093:9093"
 
   prometheus:
-    image: prom/prometheus:v3.13.0
+    image: prom/prometheus:v3.13.1
     container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
 
   node-exporter:
-    image: prom/node-exporter:v1.11.1
+    image: prom/node-exporter:v1.12.1
     container_name: node-exporter
     volumes:
       - /proc:/host/proc:ro
@@ -80,7 +80,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:13.1.0
+    image: grafana/grafana:13.1.1
     container_name: grafana
     ports:
       - "3000:3000"
