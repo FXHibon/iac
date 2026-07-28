@@ -1,6 +1,6 @@
 services:
   app:
-    image: joomla:6.1.1-php8.4-apache
+    image: joomla:6.1.2-php8.4-apache
     container_name: stanne
     restart: unless-stopped
     env_file:
@@ -28,7 +28,7 @@ services:
       - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 
   db:
-    image: mysql:9.7.1
+    image: mysql:9.7.2
     container_name: stanne-db
     restart: unless-stopped
     env_file:
