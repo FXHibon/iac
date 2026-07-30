@@ -17,7 +17,7 @@ services:
   ###### - Feeds
 
   transmission:
-    image: haugene/transmission-openvpn:5.4.1
+    image: haugene/transmission-openvpn:5.4.2
     container_name: transmission
     restart: unless-stopped
     cap_add:
