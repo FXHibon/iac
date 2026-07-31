@@ -16,7 +16,7 @@ services:
       - proxy
 
   prometheus:
-    image: prom/prometheus:v3.13.1
+    image: prom/prometheus:v3.13.2
     container_name: prometheus
     restart: unless-stopped
     user: "1000:1000"
