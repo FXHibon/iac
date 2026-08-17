@@ -1,0 +1,19 @@
+[Interface]
+PrivateKey = {{ wireguard_server_private_key }}
+Address = 10.125.50.1/24,fd11:5ee:bad:c0de::a7d:3201/64
+MTU = 1420
+ListenPort = 51820
+
+### begin rp5-main ###
+[Peer]
+PublicKey = {{ wireguard_peer_rp5_main_public_key }}
+PresharedKey = {{ wireguard_peer_rp5_main_preshared_key }}
+AllowedIPs = 10.125.50.2/32,fd11:5ee:bad:c0de::a7d:3202/128
+### end rp5-main ###
+
+### begin mac ###
+[Peer]
+PublicKey = {{ wireguard_peer_mac_public_key }}
+PresharedKey = {{ wireguard_peer_mac_preshared_key }}
+AllowedIPs = 10.125.50.3/32,fd11:5ee:bad:c0de::a7d:3203/128
+### end mac ###

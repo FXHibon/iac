@@ -1,0 +1,10 @@
+[Interface]
+PrivateKey = {{ wireguard_peer_mac_private_key }}
+Address = 10.125.50.3/24,fd11:5ee:bad:c0de::a7d:3203/64
+DNS = 9.9.9.9, 149.112.112.112
+
+[Peer]
+PublicKey = {{ wireguard_server_public_key }}
+PresharedKey = {{ wireguard_peer_mac_preshared_key }}
+Endpoint = home.fxhibon.fr:51820
+AllowedIPs = 0.0.0.0/0, ::0/0
