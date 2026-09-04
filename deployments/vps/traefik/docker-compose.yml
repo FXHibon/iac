@@ -53,7 +53,7 @@ services:
       - "traefik.http.middlewares.block-paths-ipallowlist.ipallowlist.sourcerange=127.0.0.1/32"
 
   crowdsec:
-    image: crowdsecurity/crowdsec:v1.8.0
+    image: crowdsecurity/crowdsec:v1.8.1
     container_name: crowdsec
     restart: always
     environment:
