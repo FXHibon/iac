@@ -38,6 +38,23 @@ This is a multi-layer Infrastructure as Code (IaC) project managing a Raspberry 
 - **OVH API credentials**: Via variables (ovh_application_key, ovh_application_secret, ovh_consumer_key)
 - **Sensitive data**: credentials stored externally (env file or tfvars, referenced in .gitignore)
 
+## OpenSpec & Spec-Driven Development (SDD)
+
+This repository uses **OpenSpec** (`openspec/`) to guide and document all infrastructure, security, ingress, telemetry, and deployment changes.
+
+- **Source of Truth**: `openspec/specs/` contains domain specifications:
+  - `provisioning/spec.md`: OpenTofu & OVH cloud resources
+  - `configuration/spec.md`: Host bootstrapping, SSH hardening, Fail2Ban, UFW, Docker
+  - `ingress/spec.md`: Traefik reverse proxy, SSL/TLS, IP allowlists
+  - `monitoring/spec.md`: Prometheus, Grafana, Loki (30d), Alloy, socket-based scrapers
+  - `deployments/spec.md`: Taskfile workflows, changed detection, SOPS secrets
+- **Workflow for Changes**:
+  1. Inspect authoritative specs in `openspec/specs/`.
+  2. Create a change proposal in `openspec/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, and delta specs under `specs/`).
+  3. Execute implementation using `task deploy-*` or `task tofu-apply` and verify.
+  4. Sync merged specifications into `openspec/specs/` and move `<change-id>` to `openspec/changes/archive/`.
+
+
 ## Critical Workflows
 
 ### Deploy Stacks and Applications (Taskfile / Ansible Workflow)
