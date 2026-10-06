@@ -3,13 +3,34 @@ name: Reusable Docker Build & Push
 # This event makes the workflow reusable by other repositories
 on:
   workflow_call:
+    inputs:
+      app_name:
+        description: 'Docker image name (defaults to caller repository name)'
+        required: false
+        type: string
+        default: ''
+      context:
+        description: 'Docker build context path'
+        required: false
+        type: string
+        default: '.'
+      dockerfile:
+        description: 'Path to Dockerfile'
+        required: false
+        type: string
+        default: ''
+      push:
+        description: 'Whether to push to Docker Hub (disabled on pull_request by default)'
+        required: false
+        type: boolean
+        default: true
     secrets:
       dockerhub_username:
         description: 'Docker Hub username used for logging in'
-        required: true
+        required: false
       dockerhub_token:
         description: 'Docker Hub Personal Access Token (PAT) used for authentication'
-        required: true
+        required: false
 
 jobs:
   build-and-push:
@@ -20,12 +41,16 @@ jobs:
       - name: Checkout caller repository
         uses: actions/checkout@v6
 
-      # Extract the caller repository's name (e.g. from "fxhibon/my-app" to "my-app")
+      # Extract repository name or use custom app_name
       - name: Extract repository name
         id: repo-name
         run: |
-          REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          echo "name=${REPO_NAME}" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ inputs.app_name }}" ]; then
+            echo "name=${{ inputs.app_name }}" >> "$GITHUB_OUTPUT"
+          else
+            REPO_NAME="${GITHUB_REPOSITORY#*/}"
+            echo "name=${REPO_NAME}" >> "$GITHUB_OUTPUT"
+          fi
 
       # QEMU is required to build for non-x86 architectures like ARM64 on x86 runners
       - name: Set up QEMU
@@ -35,8 +60,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Log in to Docker Hub using the secrets passed by the caller workflow
+      # Log in to Docker Hub using the secrets passed by the caller workflow (only when pushing)
       - name: Log in to Docker Hub
+        if: ${{ inputs.push && github.event_name != 'pull_request' && secrets.dockerhub_token != '' }}
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.dockerhub_username }}
@@ -64,9 +90,10 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ${{ inputs.context || '.' }}
+          file: ${{ inputs.dockerfile != '' && inputs.dockerfile || '' }}
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ inputs.push && github.event_name != 'pull_request' && secrets.dockerhub_token != '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # Speed up builds by caching layers to GitHub Actions runner
