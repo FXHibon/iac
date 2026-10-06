@@ -134,10 +134,8 @@ task renovate-check
 task renovate-apply
 ```
 
-### Git Platform Integration (Optional)
-For complete hands-free automation, you can enable Renovate on your git hosting provider:
-- **GitHub:** Install the [Renovate GitHub App](https://github.com/apps/renovate). It will read your `renovate.json` and automatically open daily/weekly Pull Requests for updates.
-- **Self-Hosted / CI Pipelines:** You can run it inside a scheduled pipeline (e.g. GitHub Actions, GitLab CI) using the official Renovate runner images.
+### GitHub Actions Automation
+A scheduled workflow ([`.github/workflows/renovate.yml`](.github/workflows/renovate.yml)) runs Renovate automatically every morning at 08:00 (Paris time) and can also be triggered manually via `workflow_dispatch`.
 
 ---
 
