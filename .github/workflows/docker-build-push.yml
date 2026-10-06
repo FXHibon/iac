@@ -62,7 +62,7 @@ jobs:
 
       # Log in to Docker Hub using the secrets passed by the caller workflow (only when pushing)
       - name: Log in to Docker Hub
-        if: ${{ inputs.push && github.event_name != 'pull_request' && secrets.dockerhub_token != '' }}
+        if: ${{ inputs.push && github.event_name != 'pull_request' }}
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.dockerhub_username }}
@@ -93,7 +93,7 @@ jobs:
           context: ${{ inputs.context || '.' }}
           file: ${{ inputs.dockerfile != '' && inputs.dockerfile || '' }}
           platforms: linux/amd64,linux/arm64
-          push: ${{ inputs.push && github.event_name != 'pull_request' && secrets.dockerhub_token != '' }}
+          push: ${{ inputs.push && github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # Speed up builds by caching layers to GitHub Actions runner
