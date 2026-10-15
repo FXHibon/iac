@@ -6,6 +6,7 @@ Infrastructure as Code (IaC) for a personal local homelab and public OVH VPS —
 
 ```
 .
+├── openspec/              # Spec-Driven Development (SDD) specifications & changesets
 ├── infra/                 # Infrastructure Provisioning & Bootstrapping (The "How")
 │   ├── tofu/              # OpenTofu — OVH VPS provisioning & DNS records
 │   └── ansible/           # Ansible — host configuration & hardening
@@ -19,6 +20,7 @@ Infrastructure as Code (IaC) for a personal local homelab and public OVH VPS —
 
 | Component | Technology | Description |
 |-----------|------------|-------------|
+| **[openspec/](openspec/)** | OpenSpec / SDD | Source-of-truth specifications (`specs/`) and delta proposals (`changes/`) for IaC iterations. |
 | **[infra/tofu/](infra/tofu/)** | OpenTofu | Provisions the OVH VPS instance and configures DNS (A records, wildcards). |
 | **[infra/ansible/](infra/ansible/)** | Ansible | Hardens SSH, installs UFW/Fail2Ban, configures Docker, and orchestrates container stack deployments. |
 | **[deployments/vps/traefik/](deployments/vps/traefik/)** | Docker Compose / Traefik v3.7 | Exposes VPS containers publicly with auto Let's Encrypt SSL and defense-in-depth security. |

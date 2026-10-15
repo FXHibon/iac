@@ -1,0 +1,18 @@
+schema: spec-driven
+
+context: |
+  Repository context: VPS & Home Lab Infrastructure as Code (IaC)
+  Tech Stack:
+    - OpenTofu (formerly Terraform) managing OVH VPS & DNS records (infra/tofu/)
+    - Ansible managing host bootstrapping, SSH hardening, Fail2Ban, UFW, Docker (infra/ansible/)
+    - Docker Compose v2 managing application stacks on VPS and Raspberry Pi 5 (deployments/)
+    - Traefik v3.7 managing reverse proxy, TLS certificates (ACME Let's Encrypt), IP AllowLists
+    - Prometheus, Grafana, Loki (30d retention), Grafana Alloy, docker-stats-exporter for telemetry
+    - Taskfile runner (Taskfile.yml) + git tag delta detection (deploy-changed)
+    - SOPS for in-memory secret decryption during playbook execution
+
+  Key IaC Invariants & Operational Rules:
+    1. IPv4 A-Record Enforcement: External subdomains MUST use IPv4 A-records to preserve client source IPs for Traefik IP Whitelists.
+    2. Socket-Based Telemetry: Scrape metrics (docker-stats-exporter) and tail logs (Grafana Alloy) via /var/run/docker.sock to support containerd overlayfs snapshotters.
+    3. In-Memory Secrets: Secrets decrypted using SOPS in-memory during Ansible playbook runs; zero plain secrets on disk.
+    4. Idempotency: All Ansible playbooks and OpenTofu plans MUST be idempotent.
